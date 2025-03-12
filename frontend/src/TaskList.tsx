@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from "react";
+import React, { useEffect, useState } from "react";
 import { Task, fetchTasks, createTask, updateTask, deleteTask } from "./api";
 import { useNavigate, Link } from "react-router-dom";
 
@@ -21,7 +21,6 @@ function TaskList() {
 
   // ステータス絞り込み用（複数選択）
   const [selectedStatuses, setSelectedStatuses] = useState<StatusType[]>([]);
-
   // ステータス絞り込みドロップダウン表示/非表示
   const [showStatusDropdown, setShowStatusDropdown] = useState(false);
 
@@ -105,10 +104,7 @@ function TaskList() {
 
   // ステータス絞り込みの表示名
   const statusFilterLabel = (() => {
-    if (selectedStatuses.length === 0) {
-      return "すべて";
-    }
-    if (selectedStatuses.length === ALL_STATUSES.length) {
+    if (selectedStatuses.length === 0 || selectedStatuses.length === ALL_STATUSES.length) {
       return "すべて";
     }
     return `${selectedStatuses.length}件選択中`;
@@ -120,13 +116,9 @@ function TaskList() {
     const matchText =
       task.name.toLowerCase().includes(filterText.toLowerCase()) ||
       task.details.toLowerCase().includes(filterText.toLowerCase());
-
-    // ステータス検索: selectedStatuses が空ならすべて
-    // そうでない場合は selectedStatuses に含まれるか
+    // ステータス検索: selectedStatuses が空ならすべて表示
     const matchStatus =
-      selectedStatuses.length === 0 ||
-      selectedStatuses.includes(task.status);
-
+      selectedStatuses.length === 0 || selectedStatuses.includes(task.status);
     return matchText && matchStatus;
   });
 
@@ -152,13 +144,31 @@ function TaskList() {
 
       {/* 検索・ステータス絞り込み */}
       <div className="mb-4 flex flex-col md:flex-row gap-2 items-center">
-        {/* 検索アイコン */}
-        <button
-          className="flex items-center bg-gray-200 text-gray-800 px-3 py-1 rounded transition-all duration-300 hover:bg-gray-300"
-          onClick={() => setShowSearch(!showSearch)}
-        >
-          <span className="mr-1">🔍</span> 検索
-        </button>
+        {/* 検索部分：検索ボタンと検索フォームの切り替え */}
+        {showSearch ? (
+          <div className="flex items-center gap-2">
+            <input
+              className="border px-2 py-1 text-sm text-gray-700 placeholder-gray-400 focus:shadow-lg transition-all duration-300"
+              style={{ width: "220px" }}
+              placeholder="検索（タスク名・詳細）"
+              value={filterText}
+              onChange={(e) => setFilterText(e.target.value)}
+            />
+            <button
+              className="bg-gray-200 text-gray-800 px-3 py-1 rounded text-sm transition-all duration-300 hover:bg-gray-300"
+              onClick={() => setShowSearch(false)}
+            >
+              閉じる
+            </button>
+          </div>
+        ) : (
+          <button
+            className="flex items-center bg-gray-200 text-gray-800 px-3 py-1 rounded transition-all duration-300 hover:bg-gray-300"
+            onClick={() => setShowSearch(true)}
+          >
+            <span className="mr-1">🔍</span> 検索
+          </button>
+        )}
 
         {/* ステータス絞り込みボタン */}
         <div className="relative">
@@ -168,7 +178,6 @@ function TaskList() {
           >
             ステータス: {statusFilterLabel}
           </button>
-          {/* ドロップダウン */}
           {showStatusDropdown && (
             <div className="absolute z-10 mt-1 w-48 bg-white border border-gray-300 rounded shadow-lg p-2">
               {ALL_STATUSES.map((status) => {
@@ -206,25 +215,6 @@ function TaskList() {
           )}
         </div>
       </div>
-
-      {/* 検索欄 */}
-      {showSearch && (
-        <div className="mb-4 flex items-center gap-2">
-          <input
-            className="border px-2 py-1 text-sm text-gray-700 placeholder-gray-400 focus:shadow-lg transition-all duration-300"
-            style={{ width: "220px" }}
-            placeholder="検索（タスク名・詳細）"
-            value={filterText}
-            onChange={(e) => setFilterText(e.target.value)}
-          />
-          <button
-            className="bg-gray-200 text-gray-800 px-3 py-1 rounded text-sm transition-all duration-300 hover:bg-gray-300"
-            onClick={() => setShowSearch(false)}
-          >
-            閉じる
-          </button>
-        </div>
-      )}
 
       {/* タスク一覧テーブル */}
       <table className="table-auto w-full">
