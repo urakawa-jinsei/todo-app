@@ -4,19 +4,18 @@ import "time"
 
 type TaskStatus string
 
-// const (
-// 	NotStarted TaskStatus = "未着手"
-// 	InProgress TaskStatus = "進行中"
-// 	Completed  TaskStatus = "完了"
-// )
+const (
+	NotStarted TaskStatus = "未着手"
+	InProgress TaskStatus = "進行中"
+	Completed  TaskStatus = "完了"
+)
 
-// Task はタスクエンティティです
 type Task struct {
-	ID        int       `json:"id"`
-	Name      string    `json:"name"`
-	Details   string    `json:"details"`
-	Status    string    `json:"status"`
-	UpdatedAt time.Time `json:"updated_at"`
+	ID        int        `json:"id"`
+	Name      string     `json:"name"`
+	Details   string     `json:"details"`
+	Status    TaskStatus `json:"status"`
+	UpdatedAt time.Time  `json:"updated_at"`
 }
 
 func GetAllTasks() ([]Task, error) {
