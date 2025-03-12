@@ -20,7 +20,6 @@ function TaskList() {
 
   const navigate = useNavigate();
 
-  // タスク一覧を取得
   const loadTasks = async () => {
     try {
       const data = await fetchTasks();
@@ -35,10 +34,8 @@ function TaskList() {
     loadTasks();
   }, []);
 
-  // 新規タスク登録
   const handleCreate = async () => {
     if (!newTaskName.trim()) {
-      // タスク名が空の場合は何もしない
       setEditingNewTask(false);
       return;
     }
@@ -48,18 +45,15 @@ function TaskList() {
         details: newTaskDetails.trim(),
         status: "未着手",
       });
-      // フィールド初期化 & 編集モード解除
       setNewTaskName("");
       setNewTaskDetails("");
       setEditingNewTask(false);
-      // 再取得
       loadTasks();
     } catch (error) {
       console.error("タスク作成に失敗", error);
     }
   };
 
-  // ステータス変更
   const handleStatusChange = async (task: Task, newStatus: StatusType) => {
     try {
       await updateTask(task.id, {
@@ -73,7 +67,6 @@ function TaskList() {
     }
   };
 
-  // 削除
   const handleDelete = async (id: number) => {
     try {
       await deleteTask(id);
@@ -83,7 +76,6 @@ function TaskList() {
     }
   };
 
-  // フィルタリング
   const filteredTasks = tasks.filter((task) => {
     const matchText =
       task.name.toLowerCase().includes(filterText.toLowerCase()) ||
@@ -92,7 +84,6 @@ function TaskList() {
     return matchText && matchStatus;
   });
 
-  // Enter キーで登録
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === "Enter") {
       handleCreate();
@@ -100,19 +91,19 @@ function TaskList() {
   };
 
   return (
-    <div className="p-4 bg-gray-100 min-h-screen">
+    <div className="max-w-6xl mx-auto min-h-screen p-4">
       {/* ヘッダ */}
       <div className="flex justify-between items-center mb-4">
         <h1 className="text-2xl font-bold">タスク一覧</h1>
         <Link
-          className="bg-indigo-200 text-indigo-800 px-4 py-2 rounded transition-all duration-300 hover:bg-indigo-300"
           to="/graph"
+          className="bg-purple-200 text-purple-800 px-4 py-2 rounded transition-all duration-300 hover:bg-purple-300"
         >
           グラフビューへ
         </Link>
       </div>
 
-      {/* フィルタリングエリア */}
+      {/* フィルタリング */}
       <div className="mb-4 flex flex-col md:flex-row gap-2 items-center">
         <input
           className="border px-2 py-1 text-sm text-gray-700 placeholder-gray-400 focus:shadow-lg transition-all duration-300"
@@ -136,7 +127,7 @@ function TaskList() {
 
       {/* タスク一覧テーブル */}
       <table className="table-auto w-full">
-        <thead className="bg-gray-200">
+        <thead className="bg-gray-50">
           <tr>
             <th className="px-4 py-2 text-left">Name</th>
             <th className="px-4 py-2 text-left">ステータス</th>
@@ -148,7 +139,7 @@ function TaskList() {
           {filteredTasks.map((task) => (
             <tr
               key={task.id}
-              className="hover:bg-gray-50 transition-all duration-300"
+              className="transition-all duration-300 hover:bg-gray-100"
             >
               <td className="px-4 py-2 border-b">{task.name}</td>
               <td className="px-4 py-2 border-b">
@@ -169,7 +160,7 @@ function TaskList() {
               </td>
               <td className="px-4 py-2 border-b">
                 <button
-                  className="bg-green-200 text-green-800 px-2 py-1 mr-2 rounded text-sm transition-all duration-300 hover:bg-green-300"
+                  className="bg-blue-200 text-blue-800 px-2 py-1 mr-2 rounded text-sm transition-all duration-300 hover:bg-blue-300"
                   onClick={() => navigate(`/task/${task.id}`)}
                 >
                   詳細
@@ -183,19 +174,17 @@ function TaskList() {
               </td>
             </tr>
           ))}
-          {/* 新規タスク追加用の行 */}
+          {/* 新規タスク追加用行 */}
           {!editingNewTask ? (
-            // 編集前: "+ 新規タスクを追加" と表示
             <tr
-              className="hover:bg-gray-50 transition-all duration-300 cursor-pointer"
+              className="transition-all duration-300 hover:bg-gray-100 cursor-pointer"
               onClick={() => setEditingNewTask(true)}
             >
-              <td className="px-4 py-2 border-b text-pink-500" colSpan={4}>
+              <td className="px-4 py-2 border-b text-pink-500 text-sm" colSpan={4}>
                 ＋ 新規タスクを追加
               </td>
             </tr>
           ) : (
-            // 編集中: タスク名・詳細の入力フィールドを表示
             <tr className="transition-all duration-300 bg-gray-50">
               <td className="px-4 py-2 border-b">
                 <input

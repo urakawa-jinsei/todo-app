@@ -62,7 +62,7 @@ function TaskDetail() {
   };
 
   return (
-    <div className="p-4 bg-gray-100 min-h-screen">
+    <div className="max-w-6xl mx-auto min-h-screen p-4">
       <button
         className="mb-4 bg-gray-300 text-gray-800 px-3 py-1 rounded text-sm transition-all duration-300 hover:bg-gray-400"
         onClick={() => navigate("/")}
@@ -71,7 +71,6 @@ function TaskDetail() {
       </button>
       {task ? (
         <div>
-          {/* タスク名の編集: 大きすぎないように text-base に */}
           <div className="mb-4">
             <input
               className="border-b focus:outline-none p-1 text-base w-80 placeholder-gray-400 text-gray-800"
@@ -80,8 +79,6 @@ function TaskDetail() {
               placeholder="タスク名"
             />
           </div>
-
-          {/* ステータスの編集 */}
           <div className="flex items-center gap-2 mb-4">
             <span className="text-sm text-gray-600">ステータス</span>
             <select
@@ -94,14 +91,10 @@ function TaskDetail() {
               <option value="完了">完了</option>
             </select>
           </div>
-
-          {/* 最終更新日時（読み取り専用） */}
           <div className="mb-4">
             <span className="block text-sm text-gray-600">最終更新日時</span>
             <p className="text-sm">{new Date(task.updated_at).toLocaleString()}</p>
           </div>
-
-          {/* 詳細の編集 */}
           <div className="mb-4">
             <span className="block text-sm text-gray-600">詳細</span>
             <textarea
@@ -112,7 +105,6 @@ function TaskDetail() {
               placeholder="タスクの詳細を入力"
             />
           </div>
-
           <div className="flex gap-2">
             <button
               className="bg-blue-200 text-blue-800 px-3 py-1 rounded text-sm transition-all duration-300 hover:bg-blue-300"
