@@ -17,9 +17,14 @@ function TaskList() {
   const [details, setDetails] = useState("");
   const navigate = useNavigate();
 
+  // フィルタリング用ステート
   const [filterText, setFilterText] = useState("");
   const [filterStatus, setFilterStatus] = useState("all"); // "all" またはステータス値
 
+  // 新規登録フォームの表示非表示
+  const [showCreateForm, setShowCreateForm] = useState(false);
+
+  // タスク一覧を取得
   const loadTasks = async () => {
     try {
       const data = await fetchTasks();
@@ -34,18 +39,21 @@ function TaskList() {
     loadTasks();
   }, []);
 
+  // 新規作成
   const handleCreate = async () => {
     if (!name) return;
     try {
       await createTask({ name, details, status: "未着手" });
       setName("");
       setDetails("");
+      setShowCreateForm(false);
       loadTasks();
     } catch (error) {
       console.error("タスク作成に失敗", error);
     }
   };
 
+  // 削除
   const handleDelete = async (id: number) => {
     try {
       await deleteTask(id);
@@ -55,6 +63,7 @@ function TaskList() {
     }
   };
 
+  // ステータス変更
   const handleStatusChange = async (task: Task, newStatus: StatusType) => {
     try {
       await updateTask(task.id, {
@@ -68,6 +77,7 @@ function TaskList() {
     }
   };
 
+  // フィルタリング処理
   const filteredTasks = tasks.filter((task) => {
     const matchText =
       task.name.toLowerCase().includes(filterText.toLowerCase()) ||
@@ -78,37 +88,15 @@ function TaskList() {
 
   return (
     <div className="p-4 bg-gray-100 min-h-screen">
+      {/* ヘッダ */}
       <div className="flex justify-between items-center mb-4">
         <h1 className="text-2xl font-bold animate-fadeIn">タスク一覧</h1>
-        {/* グラフビュー画面へのリンク */}
         <Link
           className="bg-indigo-200 text-indigo-800 px-4 py-2 rounded transition-all duration-300 hover:bg-indigo-300"
           to="/graph"
         >
           グラフビューへ
         </Link>
-      </div>
-
-      {/* 新規登録フォーム */}
-      <div className="mb-4 animate-fadeIn">
-        <input
-          className="border p-2 w-full mb-2 transition-all duration-300 focus:shadow-lg"
-          placeholder="タスク名"
-          value={name}
-          onChange={(e) => setName(e.target.value)}
-        />
-        <input
-          className="border p-2 w-full mb-2 transition-all duration-300 focus:shadow-lg"
-          placeholder="詳細"
-          value={details}
-          onChange={(e) => setDetails(e.target.value)}
-        />
-        <button 
-          className="bg-blue-200 text-blue-800 px-4 py-2 rounded transition-all duration-300 hover:bg-blue-300"
-          onClick={handleCreate}
-        >
-          登録
-        </button>
       </div>
 
       {/* フィルタリング・検索エリア */}
@@ -177,15 +165,48 @@ function TaskList() {
               </td>
             </tr>
           ))}
-          {filteredTasks.length === 0 && (
-            <tr>
-              <td className="px-4 py-2 border-b text-center" colSpan={4}>
-                一致するタスクがありません
-              </td>
-            </tr>
-          )}
+          {/* テーブル最下段に + 新規タスクを追加 の行を追加 */}
+          <tr className="hover:bg-gray-50 transition-all duration-300">
+            <td
+              className="px-4 py-2 border-b text-pink-500 cursor-pointer"
+              colSpan={4}
+              onClick={() => setShowCreateForm(true)}
+            >
+              ＋ 新規タスクを追加
+            </td>
+          </tr>
         </tbody>
       </table>
+
+      {/* 新規登録フォーム（クリック時に表示） */}
+      {showCreateForm && (
+        <div className="mt-4 animate-fadeIn">
+          <input
+            className="border p-2 w-full mb-2 transition-all duration-300 focus:shadow-lg"
+            placeholder="タスク名"
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+          />
+          <input
+            className="border p-2 w-full mb-2 transition-all duration-300 focus:shadow-lg"
+            placeholder="詳細"
+            value={details}
+            onChange={(e) => setDetails(e.target.value)}
+          />
+          <button 
+            className="bg-blue-200 text-blue-800 px-4 py-2 rounded transition-all duration-300 hover:bg-blue-300 mr-2"
+            onClick={handleCreate}
+          >
+            登録
+          </button>
+          <button 
+            className="bg-gray-300 text-gray-800 px-4 py-2 rounded transition-all duration-300 hover:bg-gray-400"
+            onClick={() => setShowCreateForm(false)}
+          >
+            キャンセル
+          </button>
+        </div>
+      )}
     </div>
   );
 }
