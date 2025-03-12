@@ -8,14 +8,23 @@ import (
 )
 
 func main() {
-	http.HandleFunc("GET /tasks", controllers.GetTasksHandler)
-	http.HandleFunc("POST /tasks", controllers.CreateTaskHandler)
-	http.HandleFunc("PUT /tasks/{id}", controllers.UpdateTaskHandler)
-	http.HandleFunc("DELETE /tasks/{id}", controllers.DeleteTaskHandler)
+	http.HandleFunc("GET /tasks", makeHandler(controllers.GetTasksHandler))
+	http.HandleFunc("POST /tasks", makeHandler(controllers.CreateTaskHandler))
+	http.HandleFunc("PUT /tasks/{id}", makeHandler(controllers.UpdateTaskHandler))
+	http.HandleFunc("DELETE /tasks/{id}", makeHandler(controllers.DeleteTaskHandler))
 
 	// OPTIONS メソッドにも対応（プリフライトリクエスト用）
-	http.HandleFunc("/", controllers.PreflightHandler)
+	http.HandleFunc("/", makeHandler(controllers.PreflightHandler))
 
 	log.Println("Backend listening on :8080")
 	log.Fatal(http.ListenAndServe(":8080", nil))
+}
+
+func makeHandler(fn func(http.ResponseWriter, *http.Request)) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Access-Control-Allow-Origin", "*")
+		w.Header().Set("Access-Control-Allow-Headers", "Content-Type")
+		w.Header().Set("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS")
+		fn(w, r)
+	}
 }

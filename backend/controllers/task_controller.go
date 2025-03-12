@@ -10,14 +10,7 @@ import (
 	"github.com/example/todo-backend/models"
 )
 
-func setCORSHeaders(w http.ResponseWriter) {
-	w.Header().Set("Access-Control-Allow-Origin", "*")
-	w.Header().Set("Access-Control-Allow-Headers", "Content-Type")
-	w.Header().Set("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS")
-}
-
 func GetTasksHandler(w http.ResponseWriter, r *http.Request) {
-	setCORSHeaders(w)
 	tasks, err := models.GetAllTasks()
 	if err != nil {
 		http.Error(w, "DB取得エラー", http.StatusInternalServerError)
@@ -30,7 +23,6 @@ func GetTasksHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func CreateTaskHandler(w http.ResponseWriter, r *http.Request) {
-	setCORSHeaders(w)
 	var t models.Task
 	if err := json.NewDecoder(r.Body).Decode(&t); err != nil {
 		http.Error(w, "JSONパースエラー", http.StatusBadRequest)
@@ -48,7 +40,6 @@ func CreateTaskHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func UpdateTaskHandler(w http.ResponseWriter, r *http.Request) {
-	setCORSHeaders(w)
 	idStr := r.PathValue("id")
 	id, err := strconv.Atoi(idStr)
 	if err != nil {
@@ -73,7 +64,6 @@ func UpdateTaskHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func DeleteTaskHandler(w http.ResponseWriter, r *http.Request) {
-	setCORSHeaders(w)
 	idStr := r.PathValue("id")
 	id, err := strconv.Atoi(idStr)
 	if err != nil {
@@ -90,7 +80,6 @@ func DeleteTaskHandler(w http.ResponseWriter, r *http.Request) {
 
 func PreflightHandler(w http.ResponseWriter, r *http.Request) {
 	if r.Method == http.MethodOptions {
-		setCORSHeaders(w)
 		w.WriteHeader(http.StatusOK)
 		return
 	}
