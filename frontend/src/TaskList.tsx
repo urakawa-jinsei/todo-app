@@ -2,9 +2,8 @@ import React, { useEffect, useState } from "react";
 import { Task, fetchTasks, createTask, updateTask, deleteTask } from "./api";
 import { useNavigate, Link } from "react-router-dom";
 
-type StatusType = Task["status"]; // '未着手' | '進行中' | '完了'
+type StatusType = Task["status"];
 
-// パステルカラーでのステータス表示用色設定
 const statusColorMap: Record<StatusType, string> = {
   "未着手": "bg-pink-200 text-pink-800",
   "進行中": "bg-blue-200 text-blue-800",
@@ -13,16 +12,13 @@ const statusColorMap: Record<StatusType, string> = {
 
 function TaskList() {
   const [tasks, setTasks] = useState<Task[]>([]);
-  const [name, setName] = useState("");
-  const [details, setDetails] = useState("");
-  const navigate = useNavigate();
-
-  // フィルタリング用ステート
   const [filterText, setFilterText] = useState("");
-  const [filterStatus, setFilterStatus] = useState("all"); // "all" またはステータス値
+  const [filterStatus, setFilterStatus] = useState("all");
+  const [newTaskName, setNewTaskName] = useState("");
+  const [newTaskDetails, setNewTaskDetails] = useState("");
+  const [editingNewTask, setEditingNewTask] = useState(false);
 
-  // 新規登録フォームの表示非表示
-  const [showCreateForm, setShowCreateForm] = useState(false);
+  const navigate = useNavigate();
 
   // タスク一覧を取得
   const loadTasks = async () => {
@@ -39,27 +35,27 @@ function TaskList() {
     loadTasks();
   }, []);
 
-  // 新規作成
+  // 新規タスク登録
   const handleCreate = async () => {
-    if (!name) return;
+    if (!newTaskName.trim()) {
+      // タスク名が空の場合は何もしない
+      setEditingNewTask(false);
+      return;
+    }
     try {
-      await createTask({ name, details, status: "未着手" });
-      setName("");
-      setDetails("");
-      setShowCreateForm(false);
+      await createTask({
+        name: newTaskName.trim(),
+        details: newTaskDetails.trim(),
+        status: "未着手",
+      });
+      // フィールド初期化 & 編集モード解除
+      setNewTaskName("");
+      setNewTaskDetails("");
+      setEditingNewTask(false);
+      // 再取得
       loadTasks();
     } catch (error) {
       console.error("タスク作成に失敗", error);
-    }
-  };
-
-  // 削除
-  const handleDelete = async (id: number) => {
-    try {
-      await deleteTask(id);
-      loadTasks();
-    } catch (error) {
-      console.error("タスク削除に失敗", error);
     }
   };
 
@@ -77,7 +73,17 @@ function TaskList() {
     }
   };
 
-  // フィルタリング処理
+  // 削除
+  const handleDelete = async (id: number) => {
+    try {
+      await deleteTask(id);
+      loadTasks();
+    } catch (error) {
+      console.error("タスク削除に失敗", error);
+    }
+  };
+
+  // フィルタリング
   const filteredTasks = tasks.filter((task) => {
     const matchText =
       task.name.toLowerCase().includes(filterText.toLowerCase()) ||
@@ -86,11 +92,18 @@ function TaskList() {
     return matchText && matchStatus;
   });
 
+  // Enter キーで登録
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === "Enter") {
+      handleCreate();
+    }
+  };
+
   return (
     <div className="p-4 bg-gray-100 min-h-screen">
       {/* ヘッダ */}
       <div className="flex justify-between items-center mb-4">
-        <h1 className="text-2xl font-bold animate-fadeIn">タスク一覧</h1>
+        <h1 className="text-2xl font-bold">タスク一覧</h1>
         <Link
           className="bg-indigo-200 text-indigo-800 px-4 py-2 rounded transition-all duration-300 hover:bg-indigo-300"
           to="/graph"
@@ -99,16 +112,18 @@ function TaskList() {
         </Link>
       </div>
 
-      {/* フィルタリング・検索エリア */}
-      <div className="mb-4 flex flex-col md:flex-row gap-2 animate-fadeIn">
+      {/* フィルタリングエリア */}
+      <div className="mb-4 flex flex-col md:flex-row gap-2 items-center">
         <input
-          className="border p-2 flex-1 transition-all duration-300 focus:shadow-lg"
-          placeholder="検索（タスク名、詳細）"
+          className="border px-2 py-1 text-sm text-gray-700 placeholder-gray-400 focus:shadow-lg transition-all duration-300"
+          style={{ width: "220px" }}
+          placeholder="検索"
           value={filterText}
           onChange={(e) => setFilterText(e.target.value)}
         />
         <select
-          className="border p-2 transition-all duration-300 focus:shadow-lg"
+          className="border p-1 text-sm text-gray-700 focus:shadow-lg transition-all duration-300"
+          style={{ width: "120px" }}
           value={filterStatus}
           onChange={(e) => setFilterStatus(e.target.value)}
         >
@@ -120,7 +135,7 @@ function TaskList() {
       </div>
 
       {/* タスク一覧テーブル */}
-      <table className="table-auto w-full animate-fadeIn">
+      <table className="table-auto w-full">
         <thead className="bg-gray-200">
           <tr>
             <th className="px-4 py-2 text-left">Name</th>
@@ -131,7 +146,10 @@ function TaskList() {
         </thead>
         <tbody>
           {filteredTasks.map((task) => (
-            <tr key={task.id} className="hover:bg-gray-50 transition-all duration-300">
+            <tr
+              key={task.id}
+              className="hover:bg-gray-50 transition-all duration-300"
+            >
               <td className="px-4 py-2 border-b">{task.name}</td>
               <td className="px-4 py-2 border-b">
                 <select
@@ -150,14 +168,14 @@ function TaskList() {
                 {new Date(task.updated_at).toLocaleString()}
               </td>
               <td className="px-4 py-2 border-b">
-                <button 
-                  className="bg-green-200 text-green-800 px-2 py-1 mr-2 rounded transition-all duration-300 hover:bg-green-300"
+                <button
+                  className="bg-green-200 text-green-800 px-2 py-1 mr-2 rounded text-sm transition-all duration-300 hover:bg-green-300"
                   onClick={() => navigate(`/task/${task.id}`)}
                 >
                   詳細
                 </button>
-                <button 
-                  className="bg-pink-200 text-pink-800 px-2 py-1 rounded transition-all duration-300 hover:bg-pink-300"
+                <button
+                  className="bg-pink-200 text-pink-800 px-2 py-1 rounded text-sm transition-all duration-300 hover:bg-pink-300"
                   onClick={() => handleDelete(task.id)}
                 >
                   削除
@@ -165,48 +183,61 @@ function TaskList() {
               </td>
             </tr>
           ))}
-          {/* テーブル最下段に + 新規タスクを追加 の行を追加 */}
-          <tr className="hover:bg-gray-50 transition-all duration-300">
-            <td
-              className="px-4 py-2 border-b text-pink-500 cursor-pointer"
-              colSpan={4}
-              onClick={() => setShowCreateForm(true)}
+          {/* 新規タスク追加用の行 */}
+          {!editingNewTask ? (
+            // 編集前: "+ 新規タスクを追加" と表示
+            <tr
+              className="hover:bg-gray-50 transition-all duration-300 cursor-pointer"
+              onClick={() => setEditingNewTask(true)}
             >
-              ＋ 新規タスクを追加
-            </td>
-          </tr>
+              <td className="px-4 py-2 border-b text-pink-500" colSpan={4}>
+                ＋ 新規タスクを追加
+              </td>
+            </tr>
+          ) : (
+            // 編集中: タスク名・詳細の入力フィールドを表示
+            <tr className="transition-all duration-300 bg-gray-50">
+              <td className="px-4 py-2 border-b">
+                <input
+                  className="border p-1 text-sm w-40 placeholder-gray-400 text-gray-800 focus:shadow-lg"
+                  placeholder="タスク名"
+                  value={newTaskName}
+                  onChange={(e) => setNewTaskName(e.target.value)}
+                  onKeyDown={handleKeyDown}
+                  autoFocus
+                />
+              </td>
+              <td className="px-4 py-2 border-b" colSpan={2}>
+                <input
+                  className="border p-1 text-sm w-60 placeholder-gray-400 text-gray-800 focus:shadow-lg"
+                  placeholder="詳細"
+                  value={newTaskDetails}
+                  onChange={(e) => setNewTaskDetails(e.target.value)}
+                  onKeyDown={handleKeyDown}
+                />
+              </td>
+              <td className="px-4 py-2 border-b">
+                <button
+                  className="bg-blue-200 text-blue-800 px-3 py-1 rounded text-sm transition-all duration-300 hover:bg-blue-300 mr-2"
+                  onClick={handleCreate}
+                >
+                  ✓
+                </button>
+                <button
+                  className="bg-gray-300 text-gray-800 px-3 py-1 rounded text-sm transition-all duration-300 hover:bg-gray-400"
+                  onClick={() => {
+                    setEditingNewTask(false);
+                    setNewTaskName("");
+                    setNewTaskDetails("");
+                  }}
+                >
+                  ✕
+                </button>
+              </td>
+            </tr>
+          )}
         </tbody>
       </table>
-
-      {/* 新規登録フォーム（クリック時に表示） */}
-      {showCreateForm && (
-        <div className="mt-4 animate-fadeIn">
-          <input
-            className="border p-2 w-full mb-2 transition-all duration-300 focus:shadow-lg"
-            placeholder="タスク名"
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-          />
-          <input
-            className="border p-2 w-full mb-2 transition-all duration-300 focus:shadow-lg"
-            placeholder="詳細"
-            value={details}
-            onChange={(e) => setDetails(e.target.value)}
-          />
-          <button 
-            className="bg-blue-200 text-blue-800 px-4 py-2 rounded transition-all duration-300 hover:bg-blue-300 mr-2"
-            onClick={handleCreate}
-          >
-            登録
-          </button>
-          <button 
-            className="bg-gray-300 text-gray-800 px-4 py-2 rounded transition-all duration-300 hover:bg-gray-400"
-            onClick={() => setShowCreateForm(false)}
-          >
-            キャンセル
-          </button>
-        </div>
-      )}
     </div>
   );
 }

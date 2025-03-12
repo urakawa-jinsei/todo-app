@@ -4,7 +4,6 @@ import { useParams, useNavigate } from "react-router-dom";
 
 type StatusType = Task["status"];
 
-// 同じパステルカラー設定
 const statusColorMap: Record<StatusType, string> = {
   "未着手": "bg-pink-200 text-pink-800",
   "進行中": "bg-blue-200 text-blue-800",
@@ -64,26 +63,27 @@ function TaskDetail() {
 
   return (
     <div className="p-4 bg-gray-100 min-h-screen">
-      <button 
-        className="mb-4 bg-gray-300 text-gray-800 px-4 py-2 rounded transition-all duration-300 hover:bg-gray-400" 
+      <button
+        className="mb-4 bg-gray-300 text-gray-800 px-3 py-1 rounded text-sm transition-all duration-300 hover:bg-gray-400"
         onClick={() => navigate("/")}
       >
         タスク一覧へ戻る
       </button>
       {task ? (
         <div>
-          {/* タスク名の編集 */}
+          {/* タスク名の編集: 大きすぎないように text-base に */}
           <div className="mb-4">
             <input
-              className="text-2xl font-bold w-full border-b focus:outline-none p-1"
+              className="border-b focus:outline-none p-1 text-base w-80 placeholder-gray-400 text-gray-800"
               value={editName}
               onChange={(e) => setEditName(e.target.value)}
+              placeholder="タスク名"
             />
           </div>
 
           {/* ステータスの編集 */}
           <div className="flex items-center gap-2 mb-4">
-            <span>ステータス</span>
+            <span className="text-sm text-gray-600">ステータス</span>
             <select
               className={`px-2 py-1 rounded text-sm border transition-all duration-300 ${statusColorMap[editStatus]}`}
               value={editStatus}
@@ -97,30 +97,31 @@ function TaskDetail() {
 
           {/* 最終更新日時（読み取り専用） */}
           <div className="mb-4">
-            <span className="block text-gray-600">最終更新日時</span>
-            <p>{new Date(task.updated_at).toLocaleString()}</p>
+            <span className="block text-sm text-gray-600">最終更新日時</span>
+            <p className="text-sm">{new Date(task.updated_at).toLocaleString()}</p>
           </div>
 
           {/* 詳細の編集 */}
           <div className="mb-4">
-            <span className="block text-gray-600">詳細</span>
+            <span className="block text-sm text-gray-600">詳細</span>
             <textarea
-              className="border w-full p-2"
+              className="border w-full p-2 text-sm placeholder-gray-400 text-gray-800"
               rows={6}
               value={editDetails}
               onChange={(e) => setEditDetails(e.target.value)}
+              placeholder="タスクの詳細を入力"
             />
           </div>
 
           <div className="flex gap-2">
             <button
-              className="bg-blue-200 text-blue-800 px-4 py-2 rounded transition-all duration-300 hover:bg-blue-300"
+              className="bg-blue-200 text-blue-800 px-3 py-1 rounded text-sm transition-all duration-300 hover:bg-blue-300"
               onClick={handleUpdate}
             >
               保存
             </button>
             <button
-              className="bg-pink-200 text-pink-800 px-4 py-2 rounded transition-all duration-300 hover:bg-pink-300"
+              className="bg-pink-200 text-pink-800 px-3 py-1 rounded text-sm transition-all duration-300 hover:bg-pink-300"
               onClick={handleDelete}
             >
               削除
