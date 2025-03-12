@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { Task, fetchTasks, createTask, updateTask, deleteTask } from "./api";
 
+// タスクステータスの型定義
 type StatusType = Task["status"]; // '完了' | '進行中' | '未着手'
 
 // ステータスごとの色付け用
@@ -17,7 +18,6 @@ function App() {
   // 新規作成用フォーム
   const [name, setName] = useState("");
   const [details, setDetails] = useState("");
-  const [status, setStatus] = useState<StatusType>("未着手");
 
   // 選択タスクの編集用
   const [editName, setEditName] = useState("");
@@ -42,13 +42,18 @@ function App() {
 
   // 新規タスク作成
   const handleCreate = async () => {
-    if (!name) return;
+    if (!name) return;  // タスク名が空の場合は作成しない
     try {
-      await createTask({ name, details, status });
+      // ステータスは「未着手」で固定
+      await createTask({ 
+        name, 
+        details, 
+        status: "未着手" 
+      });
+      // フォームリセット
       setName("");
       setDetails("");
-      setStatus("未着手");
-      // 再読み込み
+      // 一覧を再読み込み
       loadTasks();
     } catch (error) {
       console.error("タスク作成に失敗", error);
@@ -86,7 +91,7 @@ function App() {
         details: editDetails,
         status: editStatus,
       });
-      // 再読み込み
+      // 一覧を再読み込み
       loadTasks();
       // 更新内容を selectedTask に反映
       setSelectedTask({
@@ -94,7 +99,6 @@ function App() {
         name: editName,
         details: editDetails,
         status: editStatus,
-        // updated_at はサーバー側で現在時刻に更新されるため、再取得後に反映されます
       });
     } catch (error) {
       console.error("タスク更新に失敗", error);
@@ -109,28 +113,17 @@ function App() {
 
   return (
     <div className="flex h-screen">
-      {/* 左カラム: タスク一覧 */}
+      {/* 左カラム: タスク一覧 & 新規登録フォーム */}
       <div className="w-1/2 border-r overflow-y-auto">
         <div className="p-4 border-b">
           <h1 className="text-2xl font-bold mb-4">TODOアプリ</h1>
-          <div className="mb-4 flex gap-2">
+          <div className="mb-4">
             <input
-              className="border p-2 flex-1"
+              className="border p-2 w-full"
               placeholder="タスク名"
               value={name}
               onChange={(e) => setName(e.target.value)}
             />
-            <select
-              className="border p-2"
-              value={status}
-              onChange={(e) => setStatus(e.target.value as StatusType)}
-            >
-              {Object.keys(statusColorMap).map((s) => (
-                <option key={s} value={s}>
-                  {s}
-                </option>
-              ))}
-            </select>
           </div>
           <div className="mb-4">
             <input
