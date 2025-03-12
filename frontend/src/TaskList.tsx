@@ -1,29 +1,40 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { Task, fetchTasks, createTask, updateTask, deleteTask } from "./api";
 import { useNavigate, Link } from "react-router-dom";
 
-// ステータス型定義
-type StatusType = Task["status"];
+type StatusType = Task["status"]; // '未着手' | '進行中' | '完了'
 
-// ステータスごとの色設定（パステル）
+// Tailwind でパステルカラー
 const statusColorMap: Record<StatusType, string> = {
   "未着手": "bg-pink-200 text-pink-800",
   "進行中": "bg-blue-200 text-blue-800",
   "完了":   "bg-green-200 text-green-800",
 };
 
+// 絞り込みに使うステータス候補
+const ALL_STATUSES: StatusType[] = ["未着手", "進行中", "完了"];
+
 function TaskList() {
   const [tasks, setTasks] = useState<Task[]>([]);
+  const [showSearch, setShowSearch] = useState(false);
   const [filterText, setFilterText] = useState("");
-  const [filterStatus, setFilterStatus] = useState("all");
+
+  // ステータス絞り込み用（複数選択）
+  const [selectedStatuses, setSelectedStatuses] = useState<StatusType[]>([]);
+
+  // ステータス絞り込みドロップダウン表示/非表示
+  const [showStatusDropdown, setShowStatusDropdown] = useState(false);
+
+  // 新規作成用
   const [newTaskName, setNewTaskName] = useState("");
   const [newTaskDetails, setNewTaskDetails] = useState("");
   const [editingNewTask, setEditingNewTask] = useState(false);
 
-  // 検索欄の表示/非表示を制御
-  const [showSearch, setShowSearch] = useState(false);
-
   const navigate = useNavigate();
+
+  useEffect(() => {
+    loadTasks();
+  }, []);
 
   // タスク一覧を取得
   const loadTasks = async () => {
@@ -36,11 +47,7 @@ function TaskList() {
     }
   };
 
-  useEffect(() => {
-    loadTasks();
-  }, []);
-
-  // 新規作成
+  // 新規タスク作成
   const handleCreate = async () => {
     if (!newTaskName.trim()) {
       setEditingNewTask(false);
@@ -75,7 +82,7 @@ function TaskList() {
     }
   };
 
-  // 削除
+  // タスク削除
   const handleDelete = async (id: number) => {
     try {
       await deleteTask(id);
@@ -85,21 +92,50 @@ function TaskList() {
     }
   };
 
-  // Enterキーで新規作成確定
+  // ステータスのトグルチェック
+  const toggleStatus = (status: StatusType) => {
+    if (selectedStatuses.includes(status)) {
+      // 選択済みなら外す
+      setSelectedStatuses(selectedStatuses.filter((s) => s !== status));
+    } else {
+      // 未選択なら追加
+      setSelectedStatuses([...selectedStatuses, status]);
+    }
+  };
+
+  // ステータス絞り込みの表示名
+  const statusFilterLabel = (() => {
+    if (selectedStatuses.length === 0) {
+      return "すべて";
+    }
+    if (selectedStatuses.length === ALL_STATUSES.length) {
+      return "すべて";
+    }
+    return `${selectedStatuses.length}件選択中`;
+  })();
+
+  // フィルタリング
+  const filteredTasks = tasks.filter((task) => {
+    // テキスト検索
+    const matchText =
+      task.name.toLowerCase().includes(filterText.toLowerCase()) ||
+      task.details.toLowerCase().includes(filterText.toLowerCase());
+
+    // ステータス検索: selectedStatuses が空ならすべて
+    // そうでない場合は selectedStatuses に含まれるか
+    const matchStatus =
+      selectedStatuses.length === 0 ||
+      selectedStatuses.includes(task.status);
+
+    return matchText && matchStatus;
+  });
+
+  // 新規作成で Enterキー押下時
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === "Enter") {
       handleCreate();
     }
   };
-
-  // フィルタリング
-  const filteredTasks = tasks.filter((task) => {
-    const matchText =
-      task.name.toLowerCase().includes(filterText.toLowerCase()) ||
-      task.details.toLowerCase().includes(filterText.toLowerCase());
-    const matchStatus = filterStatus === "all" || task.status === filterStatus;
-    return matchText && matchStatus;
-  });
 
   return (
     <div className="max-w-6xl mx-auto min-h-screen p-4">
@@ -114,32 +150,64 @@ function TaskList() {
         </Link>
       </div>
 
-      {/* 検索ボタンとステータス絞り込み */}
+      {/* 検索・ステータス絞り込み */}
       <div className="mb-4 flex flex-col md:flex-row gap-2 items-center">
-        {/* 検索アイコン: クリックで検索欄をトグル表示 */}
+        {/* 検索アイコン */}
         <button
           className="flex items-center bg-gray-200 text-gray-800 px-3 py-1 rounded transition-all duration-300 hover:bg-gray-300"
           onClick={() => setShowSearch(!showSearch)}
         >
-          {/* シンプルなアイコンとしてUnicode文字🔍を利用 */}
           <span className="mr-1">🔍</span> 検索
         </button>
 
-        {/* ステータス絞り込み: 常に表示 */}
-        <select
-          className="border p-1 text-sm text-gray-700 focus:shadow-lg transition-all duration-300"
-          style={{ width: "120px" }}
-          value={filterStatus}
-          onChange={(e) => setFilterStatus(e.target.value)}
-        >
-          <option value="all">すべて</option>
-          <option value="未着手">未着手</option>
-          <option value="進行中">進行中</option>
-          <option value="完了">完了</option>
-        </select>
+        {/* ステータス絞り込みボタン */}
+        <div className="relative">
+          <button
+            className="bg-gray-200 text-gray-800 px-3 py-1 rounded transition-all duration-300 hover:bg-gray-300"
+            onClick={() => setShowStatusDropdown(!showStatusDropdown)}
+          >
+            ステータス: {statusFilterLabel}
+          </button>
+          {/* ドロップダウン */}
+          {showStatusDropdown && (
+            <div className="absolute z-10 mt-1 w-48 bg-white border border-gray-300 rounded shadow-lg p-2">
+              {ALL_STATUSES.map((status) => {
+                const checked = selectedStatuses.includes(status);
+                return (
+                  <label
+                    key={status}
+                    className="flex items-center text-sm text-gray-700 cursor-pointer mb-1"
+                  >
+                    <input
+                      type="checkbox"
+                      checked={checked}
+                      onChange={() => toggleStatus(status)}
+                      className="mr-2"
+                    />
+                    {status}
+                  </label>
+                );
+              })}
+              <div className="flex justify-between mt-2">
+                <button
+                  className="text-xs text-blue-600 hover:underline"
+                  onClick={() => setSelectedStatuses([])}
+                >
+                  選択をクリア
+                </button>
+                <button
+                  className="text-xs text-gray-600 hover:underline"
+                  onClick={() => setShowStatusDropdown(false)}
+                >
+                  閉じる
+                </button>
+              </div>
+            </div>
+          )}
+        </div>
       </div>
 
-      {/* 検索欄: showSearch が true の場合のみ表示 */}
+      {/* 検索欄 */}
       {showSearch && (
         <div className="mb-4 flex items-center gap-2">
           <input
@@ -207,7 +275,6 @@ function TaskList() {
               </td>
             </tr>
           ))}
-          {/* 新規タスク追加用行 */}
           {!editingNewTask ? (
             <tr
               className="transition-all duration-300 hover:bg-gray-100 cursor-pointer"
