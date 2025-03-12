@@ -4,6 +4,11 @@ services:
     build: ./backend
     ports:
       - "8080:8080"
+    volumes:
+      # ホスト側のソースをコンテナ内の /app にマウント
+      - ./backend:/app
+      # go.mod, go.sum, .air.toml なども含めてマウントすることで、変更が即時反映される
+      # ただし、node_modulesやvendorなど、不要ディレクトリは .air.toml の exclude_dir で除外
     depends_on:
       - postgres
     environment:
@@ -11,10 +16,9 @@ services:
       - POSTGRES_USER=postgres
       - POSTGRES_PASSWORD=postgres
       - POSTGRES_DB=tododb
-    volumes:
-      - ./backend/db.sql:/docker-entrypoint-initdb.d/db.sql
 
   frontend:
+    # 省略（ホットリロードは既に設定済み想定）
     build: ./frontend
     ports:
       - "3000:3000"

@@ -1,0 +1,20 @@
+# .air.toml
+
+[build]
+# ビルドコマンド
+cmd = "go build -o todo-backend ."
+
+# 実行ファイル名
+bin = "todo-backend"
+
+# ビルド後に起動する実行ファイルのパス
+full_bin = "./todo-backend"
+
+# 監視対象とする拡張子
+include_ext = ["go"]
+
+# 監視しないディレクトリ（複数ある場合はカンマ区切りで追加）
+exclude_dir = ["frontend", "node_modules", "vendor", ".git"]
+
+# ビルドが失敗してもサーバーを落とさない
+keep_run = true
