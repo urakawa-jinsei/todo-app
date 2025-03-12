@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { Task, fetchTasks, createTask, updateTask, deleteTask } from "./api";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 
 // ステータスの型定義
 type StatusType = Task["status"]; // '未着手' | '進行中' | '完了'
@@ -59,7 +59,7 @@ function TaskList() {
     }
   };
 
-  // inline でステータス変更（タスク一覧画面）
+  // inline でステータス変更
   const handleStatusChange = async (task: Task, newStatus: StatusType) => {
     try {
       await updateTask(task.id, {
@@ -73,19 +73,27 @@ function TaskList() {
     }
   };
 
-  // フィルタリング処理: 検索文字列がタスク名または詳細に含まれるか、かつステータスが一致するか
+  // フィルタリング処理
   const filteredTasks = tasks.filter((task) => {
     const matchText =
       task.name.toLowerCase().includes(filterText.toLowerCase()) ||
       task.details.toLowerCase().includes(filterText.toLowerCase());
-    const matchStatus =
-      filterStatus === "all" || task.status === filterStatus;
+    const matchStatus = filterStatus === "all" || task.status === filterStatus;
     return matchText && matchStatus;
   });
 
   return (
     <div className="p-4">
-      <h1 className="text-2xl font-bold mb-4 animate-fadeIn">タスク一覧</h1>
+      <div className="flex justify-between items-center mb-4">
+        <h1 className="text-2xl font-bold animate-fadeIn">タスク一覧</h1>
+        {/* グラフビュー画面へのリンク */}
+        <Link
+          className="bg-indigo-500 text-white px-4 py-2 rounded transition-all duration-300 hover:bg-indigo-600"
+          to="/graph"
+        >
+          グラフビューへ
+        </Link>
+      </div>
 
       {/* 新規登録フォーム */}
       <div className="mb-4 animate-fadeIn">
