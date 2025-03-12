@@ -2,8 +2,10 @@ import React, { useEffect, useState } from "react";
 import { Task, fetchTasks, createTask, updateTask, deleteTask } from "./api";
 import { useNavigate, Link } from "react-router-dom";
 
+// ステータス型定義
 type StatusType = Task["status"];
 
+// ステータスごとの色設定（パステル）
 const statusColorMap: Record<StatusType, string> = {
   "未着手": "bg-pink-200 text-pink-800",
   "進行中": "bg-blue-200 text-blue-800",
@@ -18,8 +20,12 @@ function TaskList() {
   const [newTaskDetails, setNewTaskDetails] = useState("");
   const [editingNewTask, setEditingNewTask] = useState(false);
 
+  // 検索欄の表示/非表示を制御
+  const [showSearch, setShowSearch] = useState(false);
+
   const navigate = useNavigate();
 
+  // タスク一覧を取得
   const loadTasks = async () => {
     try {
       const data = await fetchTasks();
@@ -34,6 +40,7 @@ function TaskList() {
     loadTasks();
   }, []);
 
+  // 新規作成
   const handleCreate = async () => {
     if (!newTaskName.trim()) {
       setEditingNewTask(false);
@@ -54,6 +61,7 @@ function TaskList() {
     }
   };
 
+  // ステータス変更
   const handleStatusChange = async (task: Task, newStatus: StatusType) => {
     try {
       await updateTask(task.id, {
@@ -67,6 +75,7 @@ function TaskList() {
     }
   };
 
+  // 削除
   const handleDelete = async (id: number) => {
     try {
       await deleteTask(id);
@@ -76,6 +85,14 @@ function TaskList() {
     }
   };
 
+  // Enterキーで新規作成確定
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === "Enter") {
+      handleCreate();
+    }
+  };
+
+  // フィルタリング
   const filteredTasks = tasks.filter((task) => {
     const matchText =
       task.name.toLowerCase().includes(filterText.toLowerCase()) ||
@@ -83,12 +100,6 @@ function TaskList() {
     const matchStatus = filterStatus === "all" || task.status === filterStatus;
     return matchText && matchStatus;
   });
-
-  const handleKeyDown = (e: React.KeyboardEvent) => {
-    if (e.key === "Enter") {
-      handleCreate();
-    }
-  };
 
   return (
     <div className="max-w-6xl mx-auto min-h-screen p-4">
@@ -103,15 +114,18 @@ function TaskList() {
         </Link>
       </div>
 
-      {/* フィルタリング */}
+      {/* 検索ボタンとステータス絞り込み */}
       <div className="mb-4 flex flex-col md:flex-row gap-2 items-center">
-        <input
-          className="border px-2 py-1 text-sm text-gray-700 placeholder-gray-400 focus:shadow-lg transition-all duration-300"
-          style={{ width: "220px" }}
-          placeholder="検索"
-          value={filterText}
-          onChange={(e) => setFilterText(e.target.value)}
-        />
+        {/* 検索アイコン: クリックで検索欄をトグル表示 */}
+        <button
+          className="flex items-center bg-gray-200 text-gray-800 px-3 py-1 rounded transition-all duration-300 hover:bg-gray-300"
+          onClick={() => setShowSearch(!showSearch)}
+        >
+          {/* シンプルなアイコンとしてUnicode文字🔍を利用 */}
+          <span className="mr-1">🔍</span> 検索
+        </button>
+
+        {/* ステータス絞り込み: 常に表示 */}
         <select
           className="border p-1 text-sm text-gray-700 focus:shadow-lg transition-all duration-300"
           style={{ width: "120px" }}
@@ -124,6 +138,25 @@ function TaskList() {
           <option value="完了">完了</option>
         </select>
       </div>
+
+      {/* 検索欄: showSearch が true の場合のみ表示 */}
+      {showSearch && (
+        <div className="mb-4 flex items-center gap-2">
+          <input
+            className="border px-2 py-1 text-sm text-gray-700 placeholder-gray-400 focus:shadow-lg transition-all duration-300"
+            style={{ width: "220px" }}
+            placeholder="検索（タスク名・詳細）"
+            value={filterText}
+            onChange={(e) => setFilterText(e.target.value)}
+          />
+          <button
+            className="bg-gray-200 text-gray-800 px-3 py-1 rounded text-sm transition-all duration-300 hover:bg-gray-300"
+            onClick={() => setShowSearch(false)}
+          >
+            閉じる
+          </button>
+        </div>
+      )}
 
       {/* タスク一覧テーブル */}
       <table className="table-auto w-full">
