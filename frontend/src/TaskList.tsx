@@ -2,14 +2,13 @@ import React, { useEffect, useState } from "react";
 import { Task, fetchTasks, createTask, updateTask, deleteTask } from "./api";
 import { useNavigate, Link } from "react-router-dom";
 
-// ステータスの型定義
 type StatusType = Task["status"]; // '未着手' | '進行中' | '完了'
 
-// ステータスごとの背景色・文字色設定
+// パステルカラーでのステータス表示用色設定
 const statusColorMap: Record<StatusType, string> = {
-  "未着手": "bg-red-500 text-white",
-  "進行中": "bg-blue-300 text-black",
-  "完了":   "bg-green-500 text-white",
+  "未着手": "bg-pink-200 text-pink-800",
+  "進行中": "bg-blue-200 text-blue-800",
+  "完了":   "bg-green-200 text-green-800",
 };
 
 function TaskList() {
@@ -18,11 +17,9 @@ function TaskList() {
   const [details, setDetails] = useState("");
   const navigate = useNavigate();
 
-  // フィルタリング用ステート
   const [filterText, setFilterText] = useState("");
   const [filterStatus, setFilterStatus] = useState("all"); // "all" またはステータス値
 
-  // タスク一覧を取得
   const loadTasks = async () => {
     try {
       const data = await fetchTasks();
@@ -37,7 +34,6 @@ function TaskList() {
     loadTasks();
   }, []);
 
-  // 新規タスク作成（登録時はステータスは「未着手」で固定）
   const handleCreate = async () => {
     if (!name) return;
     try {
@@ -59,7 +55,6 @@ function TaskList() {
     }
   };
 
-  // inline でステータス変更
   const handleStatusChange = async (task: Task, newStatus: StatusType) => {
     try {
       await updateTask(task.id, {
@@ -73,7 +68,6 @@ function TaskList() {
     }
   };
 
-  // フィルタリング処理
   const filteredTasks = tasks.filter((task) => {
     const matchText =
       task.name.toLowerCase().includes(filterText.toLowerCase()) ||
@@ -83,12 +77,12 @@ function TaskList() {
   });
 
   return (
-    <div className="p-4">
+    <div className="p-4 bg-gray-100 min-h-screen">
       <div className="flex justify-between items-center mb-4">
         <h1 className="text-2xl font-bold animate-fadeIn">タスク一覧</h1>
         {/* グラフビュー画面へのリンク */}
         <Link
-          className="bg-indigo-500 text-white px-4 py-2 rounded transition-all duration-300 hover:bg-indigo-600"
+          className="bg-indigo-200 text-indigo-800 px-4 py-2 rounded transition-all duration-300 hover:bg-indigo-300"
           to="/graph"
         >
           グラフビューへ
@@ -110,7 +104,7 @@ function TaskList() {
           onChange={(e) => setDetails(e.target.value)}
         />
         <button 
-          className="bg-blue-500 text-white px-4 py-2 rounded transition-all duration-300 hover:bg-blue-600"
+          className="bg-blue-200 text-blue-800 px-4 py-2 rounded transition-all duration-300 hover:bg-blue-300"
           onClick={handleCreate}
         >
           登録
@@ -139,7 +133,7 @@ function TaskList() {
 
       {/* タスク一覧テーブル */}
       <table className="table-auto w-full animate-fadeIn">
-        <thead className="bg-gray-100">
+        <thead className="bg-gray-200">
           <tr>
             <th className="px-4 py-2 text-left">Name</th>
             <th className="px-4 py-2 text-left">ステータス</th>
@@ -169,13 +163,13 @@ function TaskList() {
               </td>
               <td className="px-4 py-2 border-b">
                 <button 
-                  className="bg-green-500 text-white px-2 py-1 mr-2 rounded transition-all duration-300 hover:bg-green-600"
+                  className="bg-green-200 text-green-800 px-2 py-1 mr-2 rounded transition-all duration-300 hover:bg-green-300"
                   onClick={() => navigate(`/task/${task.id}`)}
                 >
                   詳細
                 </button>
                 <button 
-                  className="bg-red-500 text-white px-2 py-1 rounded transition-all duration-300 hover:bg-red-600"
+                  className="bg-pink-200 text-pink-800 px-2 py-1 rounded transition-all duration-300 hover:bg-pink-300"
                   onClick={() => handleDelete(task.id)}
                 >
                   削除
