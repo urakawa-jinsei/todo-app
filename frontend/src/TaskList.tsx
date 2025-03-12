@@ -8,6 +8,11 @@ function TaskList() {
   const [details, setDetails] = useState("");
   const navigate = useNavigate();
 
+  // フィルタリング用ステート
+  const [filterText, setFilterText] = useState("");
+  const [filterStatus, setFilterStatus] = useState("all"); // "all" or ステータス値
+
+  // タスク一覧を取得
   const loadTasks = async () => {
     try {
       const data = await fetchTasks();
@@ -44,9 +49,21 @@ function TaskList() {
     }
   };
 
+  // フィルタリング処理: 検索文字列がタスク名または詳細に含まれるか、かつステータスが一致するか
+  const filteredTasks = tasks.filter((task) => {
+    const matchText =
+      task.name.toLowerCase().includes(filterText.toLowerCase()) ||
+      task.details.toLowerCase().includes(filterText.toLowerCase());
+    const matchStatus =
+      filterStatus === "all" || task.status === filterStatus;
+    return matchText && matchStatus;
+  });
+
   return (
     <div className="p-4">
       <h1 className="text-2xl font-bold mb-4">タスク一覧</h1>
+
+      {/* 新規登録フォーム */}
       <div className="mb-4">
         <input
           className="border p-2 w-full mb-2"
@@ -68,6 +85,27 @@ function TaskList() {
         </button>
       </div>
 
+      {/* フィルタリング・検索エリア */}
+      <div className="mb-4 flex flex-col md:flex-row gap-2">
+        <input
+          className="border p-2 flex-1"
+          placeholder="検索（タスク名、詳細）"
+          value={filterText}
+          onChange={(e) => setFilterText(e.target.value)}
+        />
+        <select
+          className="border p-2"
+          value={filterStatus}
+          onChange={(e) => setFilterStatus(e.target.value)}
+        >
+          <option value="all">すべて</option>
+          <option value="未着手">未着手</option>
+          <option value="進行中">進行中</option>
+          <option value="完了">完了</option>
+        </select>
+      </div>
+
+      {/* タスク一覧テーブル */}
       <table className="table-auto w-full">
         <thead className="bg-gray-100">
           <tr>
@@ -78,11 +116,13 @@ function TaskList() {
           </tr>
         </thead>
         <tbody>
-          {tasks.map((task) => (
+          {filteredTasks.map((task) => (
             <tr key={task.id} className="hover:bg-gray-50">
               <td className="px-4 py-2 border-b">{task.name}</td>
               <td className="px-4 py-2 border-b">{task.status}</td>
-              <td className="px-4 py-2 border-b">{new Date(task.updated_at).toLocaleString()}</td>
+              <td className="px-4 py-2 border-b">
+                {new Date(task.updated_at).toLocaleString()}
+              </td>
               <td className="px-4 py-2 border-b">
                 <button 
                   className="bg-green-500 text-white px-2 py-1 mr-2 rounded"
@@ -99,6 +139,13 @@ function TaskList() {
               </td>
             </tr>
           ))}
+          {filteredTasks.length === 0 && (
+            <tr>
+              <td className="px-4 py-2 border-b text-center" colSpan={4}>
+                一致するタスクがありません
+              </td>
+            </tr>
+          )}
         </tbody>
       </table>
     </div>
