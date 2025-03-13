@@ -125,12 +125,6 @@ function TaskList() {
       {/* ヘッダ */}
       <div className="flex justify-between items-center mb-4">
         <h1 className="text-2xl font-bold">タスク一覧</h1>
-        <Link
-          to="/graph"
-          className="bg-purple-200 text-purple-800 px-4 py-2 rounded transition-all duration-300 hover:bg-purple-300"
-        >
-          グラフビューへ
-        </Link>
       </div>
 
       {/* コントロールエリア：左にビュー切替、右に検索・ステータス絞り込み */}
