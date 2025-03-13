@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
+import { useLocation, useNavigate, Link } from "react-router-dom";
 import { Task, fetchTasks, createTask, updateTask, deleteTask } from "./api";
-import { useNavigate, Link } from "react-router-dom";
 
 type StatusType = Task["status"]; // '未着手' | '進行中' | '完了'
 
@@ -15,27 +15,23 @@ const statusColorMap: Record<StatusType, string> = {
 const ALL_STATUSES: StatusType[] = ["未着手", "進行中", "完了"];
 
 function TaskList() {
+  const location = useLocation();
+  const navigate = useNavigate();
+  const params = new URLSearchParams(location.search);
+  const initialView = (params.get("view") as "table" | "board") || "table";
+  const [viewMode, setViewMode] = useState<"table" | "board">(initialView);
+
+  // 他の state は従来通り
   const [tasks, setTasks] = useState<Task[]>([]);
   const [showSearch, setShowSearch] = useState(false);
   const [filterText, setFilterText] = useState("");
-
-  // ステータス絞り込み用（複数選択）
   const [selectedStatuses, setSelectedStatuses] = useState<StatusType[]>([]);
-  // ステータス絞り込みドロップダウン表示/非表示
   const [showStatusDropdown, setShowStatusDropdown] = useState(false);
-
-  // 新規作成用
   const [newTaskName, setNewTaskName] = useState("");
   const [newTaskDetails, setNewTaskDetails] = useState("");
   const [editingNewTask, setEditingNewTask] = useState(false);
 
-  const navigate = useNavigate();
-
-  useEffect(() => {
-    loadTasks();
-  }, []);
-
-  // タスク一覧を取得
+  // 一覧取得
   const loadTasks = async () => {
     try {
       const data = await fetchTasks();
@@ -46,7 +42,17 @@ function TaskList() {
     }
   };
 
-  // 新規タスク作成
+  useEffect(() => {
+    loadTasks();
+  }, []);
+
+  // viewMode が変わるたびに URL クエリを更新
+  useEffect(() => {
+    const newParams = new URLSearchParams(location.search);
+    newParams.set("view", viewMode);
+    navigate({ search: newParams.toString() }, { replace: true });
+  }, [viewMode]);
+
   const handleCreate = async () => {
     if (!newTaskName.trim()) {
       setEditingNewTask(false);
@@ -67,7 +73,6 @@ function TaskList() {
     }
   };
 
-  // ステータス変更
   const handleStatusChange = async (task: Task, newStatus: StatusType) => {
     try {
       await updateTask(task.id, {
@@ -81,7 +86,6 @@ function TaskList() {
     }
   };
 
-  // タスク削除
   const handleDelete = async (id: number) => {
     try {
       await deleteTask(id);
@@ -91,18 +95,14 @@ function TaskList() {
     }
   };
 
-  // ステータスのトグルチェック
   const toggleStatus = (status: StatusType) => {
     if (selectedStatuses.includes(status)) {
-      // 選択済みなら外す
       setSelectedStatuses(selectedStatuses.filter((s) => s !== status));
     } else {
-      // 未選択なら追加
       setSelectedStatuses([...selectedStatuses, status]);
     }
   };
 
-  // ステータス絞り込みの表示名
   const statusFilterLabel = (() => {
     if (selectedStatuses.length === 0 || selectedStatuses.length === ALL_STATUSES.length) {
       return "すべて";
@@ -112,17 +112,14 @@ function TaskList() {
 
   // フィルタリング
   const filteredTasks = tasks.filter((task) => {
-    // テキスト検索
     const matchText =
       task.name.toLowerCase().includes(filterText.toLowerCase()) ||
       task.details.toLowerCase().includes(filterText.toLowerCase());
-    // ステータス検索: selectedStatuses が空ならすべて表示
     const matchStatus =
       selectedStatuses.length === 0 || selectedStatuses.includes(task.status);
     return matchText && matchStatus;
   });
 
-  // 新規作成で Enterキー押下時
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === "Enter") {
       handleCreate();
@@ -142,9 +139,28 @@ function TaskList() {
         </Link>
       </div>
 
+      {/* ビュー切り替えボタン */}
+      <div className="mb-2 flex gap-2">
+        <button
+          className={`px-3 py-1 rounded ${
+            viewMode === "table" ? "bg-blue-500 text-white" : "bg-gray-200 text-gray-800"
+          }`}
+          onClick={() => setViewMode("table")}
+        >
+          テーブル
+        </button>
+        <button
+          className={`px-3 py-1 rounded ${
+            viewMode === "board" ? "bg-blue-500 text-white" : "bg-gray-200 text-gray-800"
+          }`}
+          onClick={() => setViewMode("board")}
+        >
+          ボード
+        </button>
+      </div>
+
       {/* 検索・ステータス絞り込み */}
       <div className="mb-4 flex flex-col md:flex-row gap-2 items-center">
-        {/* 検索部分：検索ボタンと検索フォームの切り替え */}
         {showSearch ? (
           <div className="flex items-center gap-2">
             <input
@@ -170,7 +186,6 @@ function TaskList() {
           </button>
         )}
 
-        {/* ステータス絞り込みボタン */}
         <div className="relative">
           <button
             className="bg-gray-200 text-gray-800 px-3 py-1 rounded transition-all duration-300 hover:bg-gray-300"
@@ -216,107 +231,129 @@ function TaskList() {
         </div>
       </div>
 
-      {/* タスク一覧テーブル */}
-      <table className="table-auto w-full">
-        <thead className="bg-gray-50">
-          <tr>
-            <th className="px-4 py-2 text-left">Name</th>
-            <th className="px-4 py-2 text-left">ステータス</th>
-            <th className="px-4 py-2 text-left">最終更新日時</th>
-            <th className="px-4 py-2 text-left">操作</th>
-          </tr>
-        </thead>
-        <tbody>
-          {filteredTasks.map((task) => (
-            <tr
-              key={task.id}
-              className="transition-all duration-300 hover:bg-gray-100"
-            >
-              <td className="px-4 py-2 border-b">{task.name}</td>
-              <td className="px-4 py-2 border-b">
-                <select
-                  value={task.status}
-                  onChange={(e) =>
-                    handleStatusChange(task, e.target.value as StatusType)
-                  }
-                  className={`px-2 py-1 rounded text-sm transition-all duration-300 ${statusColorMap[task.status as StatusType]}`}
-                >
-                  <option value="未着手">未着手</option>
-                  <option value="進行中">進行中</option>
-                  <option value="完了">完了</option>
-                </select>
-              </td>
-              <td className="px-4 py-2 border-b">
-                {new Date(task.updated_at).toLocaleString()}
-              </td>
-              <td className="px-4 py-2 border-b">
-                <button
-                  className="bg-blue-200 text-blue-800 px-2 py-1 mr-2 rounded text-sm transition-all duration-300 hover:bg-blue-300"
-                  onClick={() => navigate(`/task/${task.id}`)}
-                >
-                  詳細
-                </button>
-                <button
-                  className="bg-pink-200 text-pink-800 px-2 py-1 rounded text-sm transition-all duration-300 hover:bg-pink-300"
-                  onClick={() => handleDelete(task.id)}
-                >
-                  削除
-                </button>
-              </td>
+      {/* テーブルビュー / ボードビュー の切り替え */}
+      {viewMode === "table" ? (
+        <table className="table-auto w-full">
+          <thead className="bg-gray-50">
+            <tr>
+              <th className="px-4 py-2 text-left">Name</th>
+              <th className="px-4 py-2 text-left">ステータス</th>
+              <th className="px-4 py-2 text-left">最終更新日時</th>
+              <th className="px-4 py-2 text-left">操作</th>
             </tr>
-          ))}
-          {!editingNewTask ? (
-            <tr
-              className="transition-all duration-300 hover:bg-gray-100 cursor-pointer"
-              onClick={() => setEditingNewTask(true)}
-            >
-              <td className="px-4 py-2 border-b text-pink-500 text-sm" colSpan={4}>
-                ＋ 新規タスクを追加
-              </td>
-            </tr>
-          ) : (
-            <tr className="transition-all duration-300 bg-gray-50">
-              <td className="px-4 py-2 border-b">
-                <input
-                  className="border p-1 text-sm w-40 placeholder-gray-400 text-gray-800 focus:shadow-lg"
-                  placeholder="タスク名"
-                  value={newTaskName}
-                  onChange={(e) => setNewTaskName(e.target.value)}
-                  onKeyDown={handleKeyDown}
-                  autoFocus
-                />
-              </td>
-              <td className="px-4 py-2 border-b" colSpan={2}>
-                <input
-                  className="border p-1 text-sm w-60 placeholder-gray-400 text-gray-800 focus:shadow-lg"
-                  placeholder="詳細"
-                  value={newTaskDetails}
-                  onChange={(e) => setNewTaskDetails(e.target.value)}
-                  onKeyDown={handleKeyDown}
-                />
-              </td>
-              <td className="px-4 py-2 border-b">
-                <button
-                  className="bg-blue-200 text-blue-800 px-3 py-1 rounded text-sm transition-all duration-300 hover:bg-blue-300 mr-2"
-                  onClick={handleCreate}
-                >
-                  ✓
-                </button>
-                <button
-                  className="bg-gray-300 text-gray-800 px-3 py-1 rounded text-sm transition-all duration-300 hover:bg-gray-400"
-                  onClick={() => {
-                    setEditingNewTask(false);
-                    setNewTaskName("");
-                    setNewTaskDetails("");
-                  }}
-                >
-                  ✕
-                </button>
-              </td>
-            </tr>
-          )}
-        </tbody>
-      </table>
+          </thead>
+          <tbody>
+            {filteredTasks.map((task) => (
+              <tr
+                key={task.id}
+                className="transition-all duration-300 hover:bg-gray-100"
+              >
+                <td className="px-4 py-2 border-b">{task.name}</td>
+                <td className="px-4 py-2 border-b">
+                  <select
+                    value={task.status}
+                    onChange={(e) =>
+                      handleStatusChange(task, e.target.value as StatusType)
+                    }
+                    className={`px-2 py-1 rounded text-sm transition-all duration-300 ${statusColorMap[task.status as StatusType]}`}
+                  >
+                    <option value="未着手">未着手</option>
+                    <option value="進行中">進行中</option>
+                    <option value="完了">完了</option>
+                  </select>
+                </td>
+                <td className="px-4 py-2 border-b">
+                  {new Date(task.updated_at).toLocaleString()}
+                </td>
+                <td className="px-4 py-2 border-b">
+                  <button
+                    className="bg-blue-200 text-blue-800 px-2 py-1 mr-2 rounded text-sm transition-all duration-300 hover:bg-blue-300"
+                    onClick={() => navigate(`/task/${task.id}?view=table`)}
+                  >
+                    詳細
+                  </button>
+                  <button
+                    className="bg-pink-200 text-pink-800 px-2 py-1 rounded text-sm transition-all duration-300 hover:bg-pink-300"
+                    onClick={() => handleDelete(task.id)}
+                  >
+                    削除
+                  </button>
+                </td>
+              </tr>
+            ))}
+            {!editingNewTask ? (
+              <tr
+                className="transition-all duration-300 hover:bg-gray-100 cursor-pointer"
+                onClick={() => setEditingNewTask(true)}
+              >
+                <td className="px-4 py-2 border-b text-pink-500 text-sm" colSpan={4}>
+                  ＋ 新規タスクを追加
+                </td>
+              </tr>
+            ) : (
+              <tr className="transition-all duration-300 bg-gray-50">
+                <td className="px-4 py-2 border-b">
+                  <input
+                    className="border p-1 text-sm w-40 placeholder-gray-400 text-gray-800 focus:shadow-lg"
+                    placeholder="タスク名"
+                    value={newTaskName}
+                    onChange={(e) => setNewTaskName(e.target.value)}
+                    onKeyDown={handleKeyDown}
+                    autoFocus
+                  />
+                </td>
+                <td className="px-4 py-2 border-b" colSpan={2}>
+                  <input
+                    className="border p-1 text-sm w-60 placeholder-gray-400 text-gray-800 focus:shadow-lg"
+                    placeholder="詳細"
+                    value={newTaskDetails}
+                    onChange={(e) => setNewTaskDetails(e.target.value)}
+                    onKeyDown={handleKeyDown}
+                  />
+                </td>
+                <td className="px-4 py-2 border-b">
+                  <button
+                    className="bg-blue-200 text-blue-800 px-3 py-1 rounded text-sm transition-all duration-300 hover:bg-blue-300 mr-2"
+                    onClick={handleCreate}
+                  >
+                    ✓
+                  </button>
+                  <button
+                    className="bg-gray-300 text-gray-800 px-3 py-1 rounded text-sm transition-all duration-300 hover:bg-gray-400"
+                    onClick={() => {
+                      setEditingNewTask(false);
+                      setNewTaskName("");
+                      setNewTaskDetails("");
+                    }}
+                  >
+                    ✕
+                  </button>
+                </td>
+              </tr>
+            )}
+          </tbody>
+        </table>
+      ) : (
+        <div className="flex gap-4">
+          {ALL_STATUSES.map((status) => {
+            const tasksInStatus = filteredTasks.filter((t) => t.status === status);
+            return (
+              <div key={status} className="flex-1 border rounded p-2 bg-gray-50">
+                <h2 className="font-bold mb-2 text-gray-700">{status}</h2>
+                {tasksInStatus.map((task) => (
+                  <div
+                    key={task.id}
+                    className="mb-2 p-2 bg-white rounded shadow text-sm cursor-pointer"
+                    onClick={() => navigate(`/task/${task.id}?view=board`)}
+                  >
+                    <div className="font-medium text-gray-800">{task.name}</div>
+                  </div>
+                ))}
+              </div>
+            );
+          })}
+        </div>
+      )}
     </div>
   );
 }
