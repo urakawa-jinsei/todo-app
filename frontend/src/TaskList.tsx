@@ -332,16 +332,29 @@ function TaskList() {
         <div className="flex gap-4">
           {ALL_STATUSES.map((status) => {
             const tasksInStatus = filteredTasks.filter((t) => t.status === status);
+
+            // ステータス名をピル型ラベルにするためのマッピング
+            const boardHeadingColorMap: Record<StatusType, string> = {
+              "未着手": "bg-pink-200 text-pink-800",
+              "進行中": "bg-blue-200 text-blue-800",
+              "完了":   "bg-green-200 text-green-800",
+            };
+
             return (
-              <div key={status} className="flex-1 border rounded p-2 bg-gray-50">
-                <h2 className="font-bold mb-2 text-gray-700">{status}</h2>
+              <div key={status} className="flex-1 min-w-[200px]">
+                {/* ステータスの色は文字周りのみにする（ピル型） */}
+                <h2
+                  className={`inline-block px-2 py-1 mb-2 font-bold rounded ${boardHeadingColorMap[status]}`}
+                >
+                  {status}
+                </h2>
                 {tasksInStatus.map((task) => (
                   <div
                     key={task.id}
-                    className="mb-2 p-2 bg-white rounded shadow text-sm cursor-pointer"
+                    className="mb-2 p-2 border border-gray-300 shadow-sm rounded text-sm cursor-pointer"
                     onClick={() => navigate(`/task/${task.id}?view=board`)}
                   >
-                    <div className="font-medium text-gray-800">{task.name}</div>
+                    {task.name}
                   </div>
                 ))}
               </div>
