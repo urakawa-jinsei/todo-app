@@ -14,7 +14,8 @@ function TaskDetail() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const location = useLocation();
-  // クエリから元のビュー（"table" または "board"）を取得、デフォルトは "table"
+
+  // クエリから元のビュー（"table" or "board"）を取得。デフォルトは "table"
   const params = new URLSearchParams(location.search);
   const originView = (params.get("view") as "table" | "board") || "table";
 
@@ -42,6 +43,7 @@ function TaskDetail() {
     loadTask();
   }, [id]);
 
+  // 保存ボタン: 更新後に一覧画面へ遷移
   const handleUpdate = async () => {
     if (!task) return;
     try {
@@ -50,7 +52,8 @@ function TaskDetail() {
         details: editDetails,
         status: editStatus,
       });
-      loadTask();
+      // 一覧画面に戻る（クエリパラメータの view を維持）
+      navigate(`/?view=${originView}`);
     } catch (error) {
       console.error("タスク更新に失敗", error);
     }
@@ -60,7 +63,6 @@ function TaskDetail() {
     if (!task) return;
     try {
       await deleteTask(task.id);
-      // 元の一覧ビューへ戻る（クエリパラメータ view を維持）
       navigate(`/?view=${originView}`);
     } catch (error) {
       console.error("タスク削除に失敗", error);
@@ -69,7 +71,6 @@ function TaskDetail() {
 
   return (
     <div className="max-w-6xl mx-auto min-h-screen p-4">
-      {/* 戻るボタン：クエリパラメータの view を付与して一覧画面に戻る */}
       <button
         className="mb-4 bg-gray-300 text-gray-800 px-3 py-1 rounded text-sm transition-all duration-300 hover:bg-gray-400"
         onClick={() => navigate(`/?view=${originView}`)}
