@@ -4,14 +4,12 @@ import { Task, fetchTasks, createTask, updateTask, deleteTask } from "./api";
 
 type StatusType = Task["status"]; // '未着手' | '進行中' | '完了'
 
-// Tailwind でパステルカラー
 const statusColorMap: Record<StatusType, string> = {
   "未着手": "bg-pink-200 text-pink-800",
   "進行中": "bg-blue-200 text-blue-800",
   "完了":   "bg-green-200 text-green-800",
 };
 
-// 絞り込みに使うステータス候補
 const ALL_STATUSES: StatusType[] = ["未着手", "進行中", "完了"];
 
 function TaskList() {
@@ -21,7 +19,6 @@ function TaskList() {
   const initialView = (params.get("view") as "table" | "board") || "table";
   const [viewMode, setViewMode] = useState<"table" | "board">(initialView);
 
-  // 他の state は従来通り
   const [tasks, setTasks] = useState<Task[]>([]);
   const [showSearch, setShowSearch] = useState(false);
   const [filterText, setFilterText] = useState("");
@@ -31,7 +28,16 @@ function TaskList() {
   const [newTaskDetails, setNewTaskDetails] = useState("");
   const [editingNewTask, setEditingNewTask] = useState(false);
 
-  // 一覧取得
+  useEffect(() => {
+    loadTasks();
+  }, []);
+
+  useEffect(() => {
+    const newParams = new URLSearchParams(location.search);
+    newParams.set("view", viewMode);
+    navigate({ search: newParams.toString() }, { replace: true });
+  }, [viewMode]);
+
   const loadTasks = async () => {
     try {
       const data = await fetchTasks();
@@ -41,17 +47,6 @@ function TaskList() {
       setTasks([]);
     }
   };
-
-  useEffect(() => {
-    loadTasks();
-  }, []);
-
-  // viewMode が変わるたびに URL クエリを更新
-  useEffect(() => {
-    const newParams = new URLSearchParams(location.search);
-    newParams.set("view", viewMode);
-    navigate({ search: newParams.toString() }, { replace: true });
-  }, [viewMode]);
 
   const handleCreate = async () => {
     if (!newTaskName.trim()) {
@@ -110,7 +105,6 @@ function TaskList() {
     return `${selectedStatuses.length}件選択中`;
   })();
 
-  // フィルタリング
   const filteredTasks = tasks.filter((task) => {
     const matchText =
       task.name.toLowerCase().includes(filterText.toLowerCase()) ||
@@ -139,28 +133,8 @@ function TaskList() {
         </Link>
       </div>
 
-      {/* ビュー切り替えボタン */}
-      <div className="mb-2 flex gap-2">
-        <button
-          className={`px-3 py-1 rounded ${
-            viewMode === "table" ? "bg-blue-500 text-white" : "bg-gray-200 text-gray-800"
-          }`}
-          onClick={() => setViewMode("table")}
-        >
-          テーブル
-        </button>
-        <button
-          className={`px-3 py-1 rounded ${
-            viewMode === "board" ? "bg-blue-500 text-white" : "bg-gray-200 text-gray-800"
-          }`}
-          onClick={() => setViewMode("board")}
-        >
-          ボード
-        </button>
-      </div>
-
-      {/* 検索・ステータス絞り込み */}
-      <div className="mb-4 flex flex-col md:flex-row gap-2 items-center">
+      {/* コントロールエリア：検索ボタン、ステータス絞り込み、テーブルボタン、ボードボタン */}
+      <div className="mb-4 flex items-center gap-2">
         {showSearch ? (
           <div className="flex items-center gap-2">
             <input
@@ -229,6 +203,23 @@ function TaskList() {
             </div>
           )}
         </div>
+
+        <button
+          className={`px-3 py-1 rounded ${
+            viewMode === "table" ? "bg-blue-500 text-white" : "bg-gray-200 text-gray-800"
+          } transition-all duration-300`}
+          onClick={() => setViewMode("table")}
+        >
+          テーブル
+        </button>
+        <button
+          className={`px-3 py-1 rounded ${
+            viewMode === "board" ? "bg-blue-500 text-white" : "bg-gray-200 text-gray-800"
+          } transition-all duration-300`}
+          onClick={() => setViewMode("board")}
+        >
+          ボード
+        </button>
       </div>
 
       {/* テーブルビュー / ボードビュー の切り替え */}
