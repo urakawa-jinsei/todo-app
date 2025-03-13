@@ -7,7 +7,7 @@ type StatusType = Task["status"]; // '未着手' | '進行中' | '完了'
 const statusColorMap: Record<StatusType, string> = {
   "未着手": "bg-pink-200 text-pink-800",
   "進行中": "bg-blue-200 text-blue-800",
-  "完了":   "bg-green-200 text-green-800",
+  "完了": "bg-green-200 text-green-800",
 };
 
 const ALL_STATUSES: StatusType[] = ["未着手", "進行中", "完了"];
@@ -133,93 +133,97 @@ function TaskList() {
         </Link>
       </div>
 
-      {/* コントロールエリア：検索ボタン、ステータス絞り込み、テーブルボタン、ボードボタン */}
-      <div className="mb-4 flex items-center gap-2">
-        {showSearch ? (
-          <div className="flex items-center gap-2">
-            <input
-              className="border px-2 py-1 text-sm text-gray-700 placeholder-gray-400 focus:shadow-lg transition-all duration-300"
-              style={{ width: "220px" }}
-              placeholder="検索（タスク名・詳細）"
-              value={filterText}
-              onChange={(e) => setFilterText(e.target.value)}
-            />
-            <button
-              className="bg-gray-200 text-gray-800 px-3 py-1 rounded text-sm transition-all duration-300 hover:bg-gray-300"
-              onClick={() => setShowSearch(false)}
-            >
-              閉じる
-            </button>
-          </div>
-        ) : (
+      {/* コントロールエリア：左にビュー切替、右に検索・ステータス絞り込み */}
+      <div className="mb-4 flex justify-between items-center">
+        {/* 左グループ：テーブルボタン、ボードボタン */}
+        <div className="flex gap-2">
           <button
-            className="flex items-center bg-gray-200 text-gray-800 px-3 py-1 rounded transition-all duration-300 hover:bg-gray-300"
-            onClick={() => setShowSearch(true)}
+            className={`px-3 py-1 rounded ${
+              viewMode === "table" ? "bg-blue-500 text-white" : "bg-gray-200 text-gray-800"
+            } transition-all duration-300`}
+            onClick={() => setViewMode("table")}
           >
-            <span className="mr-1">🔍</span> 検索
+            テーブル
           </button>
-        )}
-
-        <div className="relative">
           <button
-            className="bg-gray-200 text-gray-800 px-3 py-1 rounded transition-all duration-300 hover:bg-gray-300"
-            onClick={() => setShowStatusDropdown(!showStatusDropdown)}
+            className={`px-3 py-1 rounded ${
+              viewMode === "board" ? "bg-blue-500 text-white" : "bg-gray-200 text-gray-800"
+            } transition-all duration-300`}
+            onClick={() => setViewMode("board")}
           >
-            ステータス: {statusFilterLabel}
+            ボード
           </button>
-          {showStatusDropdown && (
-            <div className="absolute z-10 mt-1 w-48 bg-white border border-gray-300 rounded shadow-lg p-2">
-              {ALL_STATUSES.map((status) => {
-                const checked = selectedStatuses.includes(status);
-                return (
-                  <label
-                    key={status}
-                    className="flex items-center text-sm text-gray-700 cursor-pointer mb-1"
-                  >
-                    <input
-                      type="checkbox"
-                      checked={checked}
-                      onChange={() => toggleStatus(status)}
-                      className="mr-2"
-                    />
-                    {status}
-                  </label>
-                );
-              })}
-              <div className="flex justify-between mt-2">
-                <button
-                  className="text-xs text-blue-600 hover:underline"
-                  onClick={() => setSelectedStatuses([])}
-                >
-                  選択をクリア
-                </button>
-                <button
-                  className="text-xs text-gray-600 hover:underline"
-                  onClick={() => setShowStatusDropdown(false)}
-                >
-                  閉じる
-                </button>
-              </div>
-            </div>
-          )}
         </div>
-
-        <button
-          className={`px-3 py-1 rounded ${
-            viewMode === "table" ? "bg-blue-500 text-white" : "bg-gray-200 text-gray-800"
-          } transition-all duration-300`}
-          onClick={() => setViewMode("table")}
-        >
-          テーブル
-        </button>
-        <button
-          className={`px-3 py-1 rounded ${
-            viewMode === "board" ? "bg-blue-500 text-white" : "bg-gray-200 text-gray-800"
-          } transition-all duration-300`}
-          onClick={() => setViewMode("board")}
-        >
-          ボード
-        </button>
+        {/* 右グループ：検索ボタン（フォーム切替）、ステータス絞り込み */}
+        <div className="flex gap-2">
+          {showSearch ? (
+            <div className="flex items-center gap-2">
+              <input
+                className="border px-2 py-1 text-sm text-gray-700 placeholder-gray-400 focus:shadow-lg transition-all duration-300"
+                style={{ width: "220px" }}
+                placeholder="検索（タスク名・詳細）"
+                value={filterText}
+                onChange={(e) => setFilterText(e.target.value)}
+              />
+              <button
+                className="bg-gray-200 text-gray-800 px-3 py-1 rounded text-sm transition-all duration-300 hover:bg-gray-300"
+                onClick={() => setShowSearch(false)}
+              >
+                閉じる
+              </button>
+            </div>
+          ) : (
+            <button
+              className="flex items-center bg-gray-200 text-gray-800 px-3 py-1 rounded transition-all duration-300 hover:bg-gray-300"
+              onClick={() => setShowSearch(true)}
+            >
+              <span className="mr-1">🔍</span> 検索
+            </button>
+          )}
+          <div className="relative">
+            <button
+              className="bg-gray-200 text-gray-800 px-3 py-1 rounded transition-all duration-300 hover:bg-gray-300"
+              onClick={() => setShowStatusDropdown(!showStatusDropdown)}
+            >
+              ステータス: {statusFilterLabel}
+            </button>
+            {showStatusDropdown && (
+              <div className="absolute z-10 mt-1 w-48 bg-white border border-gray-300 rounded shadow-lg p-2">
+                {ALL_STATUSES.map((status) => {
+                  const checked = selectedStatuses.includes(status);
+                  return (
+                    <label
+                      key={status}
+                      className="flex items-center text-sm text-gray-700 cursor-pointer mb-1"
+                    >
+                      <input
+                        type="checkbox"
+                        checked={checked}
+                        onChange={() => toggleStatus(status)}
+                        className="mr-2"
+                      />
+                      {status}
+                    </label>
+                  );
+                })}
+                <div className="flex justify-between mt-2">
+                  <button
+                    className="text-xs text-blue-600 hover:underline"
+                    onClick={() => setSelectedStatuses([])}
+                  >
+                    選択をクリア
+                  </button>
+                  <button
+                    className="text-xs text-gray-600 hover:underline"
+                    onClick={() => setShowStatusDropdown(false)}
+                  >
+                    閉じる
+                  </button>
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
       </div>
 
       {/* テーブルビュー / ボードビュー の切り替え */}
