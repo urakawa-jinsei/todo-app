@@ -1,0 +1,131 @@
+openapi: 3.0.0
+info:
+  title: TODO Backend API
+  version: "1.0"
+  description: API documentation for the TODO backend application.
+servers:
+  - url: http://localhost:8080
+paths:
+  /tasks:
+    get:
+      summary: タスク一覧取得
+      description: すべてのタスクを取得するエンドポイント
+      responses:
+        '200':
+          description: タスク一覧の取得に成功
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Task'
+        '500':
+          description: サーバーエラー
+    post:
+      summary: タスク作成
+      description: 新しいタスクを作成するエンドポイント
+      requestBody:
+        description: 作成するタスク情報
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TaskInput'
+      responses:
+        '201':
+          description: タスク作成に成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Task'
+        '400':
+          description: 不正なリクエスト
+        '500':
+          description: サーバーエラー
+  /tasks/{id}:
+    put:
+      summary: タスク更新
+      description: 指定されたIDのタスクを更新するエンドポイント
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+          description: 更新するタスクのID
+      requestBody:
+        description: 更新するタスク情報
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TaskInput'
+      responses:
+        '200':
+          description: タスク更新に成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Task'
+        '400':
+          description: 不正なリクエスト
+        '500':
+          description: サーバーエラー
+    delete:
+      summary: タスク削除
+      description: 指定されたIDのタスクを削除するエンドポイント
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+          description: 削除するタスクのID
+      responses:
+        '204':
+          description: タスク削除に成功（No Content）
+        '400':
+          description: 不正なリクエスト
+        '500':
+          description: サーバーエラー
+components:
+  schemas:
+    Task:
+      type: object
+      properties:
+        id:
+          type: integer
+          example: 1
+        name:
+          type: string
+          example: "Buy groceries"
+        details:
+          type: string
+          example: "Milk, Bread, Eggs"
+        status:
+          type: string
+          enum:
+            - 未着手
+            - 進行中
+            - 完了
+          example: "未着手"
+        updated_at:
+          type: string
+          format: date-time
+          example: "2023-03-15T14:00:00Z"
+    TaskInput:
+      type: object
+      properties:
+        name:
+          type: string
+          example: "Buy groceries"
+        details:
+          type: string
+          example: "Milk, Bread, Eggs"
+        status:
+          type: string
+          enum:
+            - 未着手
+            - 進行中
+            - 完了
+          example: "未着手"
