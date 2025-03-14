@@ -4,10 +4,11 @@ import { Task, fetchTasks, createTask, updateTask, deleteTask } from "./api";
 
 type StatusType = Task["status"]; // '未着手' | '進行中' | '完了'
 
-const statusColorMap: Record<StatusType, string> = {
+// セレクトボックス用のピル型背景色
+const bubbleColorMap: Record<StatusType, string> = {
   "未着手": "bg-pink-200 text-pink-800",
   "進行中": "bg-blue-200 text-blue-800",
-  "完了": "bg-green-200 text-green-800",
+  "完了":   "bg-green-200 text-green-800",
 };
 
 const ALL_STATUSES: StatusType[] = ["未着手", "進行中", "完了"];
@@ -32,6 +33,7 @@ function TaskList() {
     loadTasks();
   }, []);
 
+  // viewMode が変わるたびにクエリパラメータを更新
   useEffect(() => {
     const newParams = new URLSearchParams(location.search);
     newParams.set("view", viewMode);
@@ -125,11 +127,14 @@ function TaskList() {
       {/* ヘッダ */}
       <div className="flex justify-between items-center mb-4">
         <h1 className="text-2xl font-bold">タスク一覧</h1>
+        <div>
+          {/* 例: グラフビューなどが削除されたなら、ここを空にするか他のボタンを置く */}
+        </div>
       </div>
 
-      {/* コントロールエリア：左にビュー切替、右に検索・ステータス絞り込み */}
+      {/* ビュー切り替えなど */}
       <div className="mb-4 flex justify-between items-center">
-        {/* 左グループ：テーブルボタン、ボードボタン */}
+        {/* 左側: テーブル or ボード 切り替え */}
         <div className="flex gap-2">
           <button
             className={`px-3 py-1 rounded ${
@@ -148,8 +153,8 @@ function TaskList() {
             ボード
           </button>
         </div>
-        {/* 右グループ：検索ボタン（フォーム切替）、ステータス絞り込み */}
-        <div className="flex gap-2">
+        {/* 右側: 検索、ステータス絞り込み */}
+        <div className="flex gap-2 items-center">
           {showSearch ? (
             <div className="flex items-center gap-2">
               <input
@@ -220,7 +225,7 @@ function TaskList() {
         </div>
       </div>
 
-      {/* テーブルビュー / ボードビュー の切り替え */}
+      {/* テーブルビュー or ボードビュー */}
       {viewMode === "table" ? (
         <table className="table-auto w-full">
           <thead className="bg-gray-50">
@@ -244,11 +249,15 @@ function TaskList() {
                     onChange={(e) =>
                       handleStatusChange(task, e.target.value as StatusType)
                     }
-                    className={`px-2 py-1 rounded text-sm transition-all duration-300 ${statusColorMap[task.status as StatusType]}`}
+                    className={`
+                      inline-flex items-center px-3 py-1 rounded-full text-sm 
+                      border border-transparent appearance-none pr-8
+                      ${bubbleColorMap[task.status]}
+                    `}
                   >
-                    <option value="未着手">未着手</option>
-                    <option value="進行中">進行中</option>
-                    <option value="完了">完了</option>
+                    <option value="未着手">● 未着手</option>
+                    <option value="進行中">● 進行中</option>
+                    <option value="完了">● 完了</option>
                   </select>
                 </td>
                 <td className="px-4 py-2 border-b">
@@ -323,22 +332,16 @@ function TaskList() {
           </tbody>
         </table>
       ) : (
+        // ボードビュー
         <div className="flex gap-4">
           {ALL_STATUSES.map((status) => {
             const tasksInStatus = filteredTasks.filter((t) => t.status === status);
-
-            // ステータス名をピル型ラベルにするためのマッピング
-            const boardHeadingColorMap: Record<StatusType, string> = {
-              "未着手": "bg-pink-200 text-pink-800",
-              "進行中": "bg-blue-200 text-blue-800",
-              "完了":   "bg-green-200 text-green-800",
-            };
-
             return (
               <div key={status} className="flex-1 min-w-[200px]">
-                {/* ステータスの色は文字周りのみにする（ピル型） */}
                 <h2
-                  className={`inline-block px-2 py-1 mb-2 font-bold rounded ${boardHeadingColorMap[status]}`}
+                  className={`inline-block px-2 py-1 mb-2 font-bold rounded ${
+                    bubbleColorMap[status]
+                  }`}
                 >
                   {status}
                 </h2>

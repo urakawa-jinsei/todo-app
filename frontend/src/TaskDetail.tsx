@@ -4,7 +4,7 @@ import { Task, updateTask, fetchTasks, deleteTask } from "./api";
 
 type StatusType = Task["status"];
 
-const statusColorMap: Record<StatusType, string> = {
+const bubbleColorMap: Record<StatusType, string> = {
   "未着手": "bg-pink-200 text-pink-800",
   "進行中": "bg-blue-200 text-blue-800",
   "完了":   "bg-green-200 text-green-800",
@@ -14,8 +14,6 @@ function TaskDetail() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const location = useLocation();
-
-  // クエリから元のビュー（"table" or "board"）を取得。デフォルトは "table"
   const params = new URLSearchParams(location.search);
   const originView = (params.get("view") as "table" | "board") || "table";
 
@@ -43,7 +41,6 @@ function TaskDetail() {
     loadTask();
   }, [id]);
 
-  // 保存ボタン: 更新後に一覧画面へ遷移
   const handleUpdate = async () => {
     if (!task) return;
     try {
@@ -52,7 +49,7 @@ function TaskDetail() {
         details: editDetails,
         status: editStatus,
       });
-      // 一覧画面に戻る（クエリパラメータの view を維持）
+      // 更新後に一覧画面へ戻る
       navigate(`/?view=${originView}`);
     } catch (error) {
       console.error("タスク更新に失敗", error);
@@ -90,13 +87,17 @@ function TaskDetail() {
           <div className="flex items-center gap-2 mb-4">
             <span className="text-sm text-gray-600">ステータス</span>
             <select
-              className={`px-2 py-1 rounded text-sm border transition-all duration-300 ${statusColorMap[editStatus]}`}
+              className={`
+                inline-flex items-center px-3 py-1 rounded-full text-sm 
+                border border-transparent appearance-none pr-8
+                ${bubbleColorMap[editStatus]}
+              `}
               value={editStatus}
               onChange={(e) => setEditStatus(e.target.value as StatusType)}
             >
-              <option value="未着手">未着手</option>
-              <option value="進行中">進行中</option>
-              <option value="完了">完了</option>
+              <option value="未着手">● 未着手</option>
+              <option value="進行中">● 進行中</option>
+              <option value="完了">● 完了</option>
             </select>
           </div>
           <div className="mb-4">
