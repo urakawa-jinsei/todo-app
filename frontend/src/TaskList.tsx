@@ -1,11 +1,10 @@
 import React, { useEffect, useState } from "react";
 import { useLocation, useNavigate, Link } from "react-router-dom";
-import { DragDropContext, Droppable, Draggable, DropResult } from "react-beautiful-dnd";
+import { DragDropContext, Droppable, Draggable } from "react-beautiful-dnd";
 import { Task, fetchTasks, createTask, updateTask, deleteTask } from "./api";
 
 type StatusType = Task["status"]; // '未着手' | '進行中' | '完了'
 
-// ピル型用の背景色・文字色
 const bubbleColorMap: Record<StatusType, string> = {
   "未着手": "bg-pink-200 text-pink-800",
   "進行中": "bg-blue-200 text-blue-800",
@@ -83,7 +82,8 @@ function TaskList() {
     }
   };
 
-  const handleDelete = async (id: number) => {
+  const handleDelete = async (id: number, e: React.MouseEvent) => {
+    e.stopPropagation();
     try {
       await deleteTask(id);
       loadTasks();
@@ -122,8 +122,8 @@ function TaskList() {
     }
   };
 
-  // ドラッグ終了時のハンドラ：型注釈は any を利用
-  const handleDragEnd = async (result: any /* DropResult */) => {
+  // ドラッグ終了時のハンドラ（型は any としています）
+  const handleDragEnd = async (result: any) => {
     const { draggableId, source, destination } = result;
     if (!destination) return;
     if (destination.droppableId === source.droppableId) return;
@@ -145,8 +145,9 @@ function TaskList() {
         <h1 className="text-2xl font-bold">タスク一覧</h1>
       </div>
 
-      {/* コントロールエリア：左にビュー切替、右に検索・ステータス絞り込み */}
+      {/* コントロールエリア */}
       <div className="mb-4 flex justify-between items-center">
+        {/* 左側：ビュー切替 */}
         <div className="flex gap-2">
           <button
             className={`px-3 py-1 rounded ${
@@ -165,6 +166,7 @@ function TaskList() {
             ボード
           </button>
         </div>
+        {/* 右側：検索とステータス絞り込み */}
         <div className="flex gap-2 items-center">
           {showSearch ? (
             <div className="flex items-center gap-2">
@@ -251,7 +253,8 @@ function TaskList() {
             {filteredTasks.map((task) => (
               <tr
                 key={task.id}
-                className="transition-all duration-300 hover:bg-gray-100"
+                className="transition-all duration-300 hover:bg-gray-100 cursor-pointer"
+                onClick={() => navigate(`/task/${task.id}?view=table`)}
               >
                 <td className="px-4 py-2 border-b">{task.name}</td>
                 <td className="px-4 py-2 border-b">
@@ -265,6 +268,7 @@ function TaskList() {
                       border border-transparent appearance-none pr-8
                       ${bubbleColorMap[task.status]}
                     `}
+                    onClick={(e) => e.stopPropagation()}
                   >
                     <option value="未着手">● 未着手</option>
                     <option value="進行中">● 進行中</option>
@@ -276,14 +280,11 @@ function TaskList() {
                 </td>
                 <td className="px-4 py-2 border-b">
                   <button
-                    className="bg-blue-200 text-blue-800 px-2 py-1 mr-2 rounded text-sm transition-all duration-300 hover:bg-blue-300"
-                    onClick={() => navigate(`/task/${task.id}?view=table`)}
-                  >
-                    詳細
-                  </button>
-                  <button
                     className="bg-pink-200 text-pink-800 px-2 py-1 rounded text-sm transition-all duration-300 hover:bg-pink-300"
-                    onClick={() => handleDelete(task.id)}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleDelete(task.id, e);
+                    }}
                   >
                     削除
                   </button>
