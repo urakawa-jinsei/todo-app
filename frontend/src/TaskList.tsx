@@ -1,10 +1,11 @@
 import React, { useEffect, useState } from "react";
 import { useLocation, useNavigate, Link } from "react-router-dom";
+import { DragDropContext, Droppable, Draggable, DropResult } from "react-beautiful-dnd";
 import { Task, fetchTasks, createTask, updateTask, deleteTask } from "./api";
 
 type StatusType = Task["status"]; // '未着手' | '進行中' | '完了'
 
-// セレクトボックス用のピル型背景色
+// ピル型用の背景色・文字色
 const bubbleColorMap: Record<StatusType, string> = {
   "未着手": "bg-pink-200 text-pink-800",
   "進行中": "bg-blue-200 text-blue-800",
@@ -33,7 +34,6 @@ function TaskList() {
     loadTasks();
   }, []);
 
-  // viewMode が変わるたびにクエリパラメータを更新
   useEffect(() => {
     const newParams = new URLSearchParams(location.search);
     newParams.set("view", viewMode);
@@ -122,19 +122,31 @@ function TaskList() {
     }
   };
 
+  // ドラッグ終了時のハンドラ：型注釈は any を利用
+  const handleDragEnd = async (result: any /* DropResult */) => {
+    const { draggableId, source, destination } = result;
+    if (!destination) return;
+    if (destination.droppableId === source.droppableId) return;
+    const taskToUpdate = filteredTasks.find((t) => t.id.toString() === draggableId);
+    if (taskToUpdate) {
+      await updateTask(taskToUpdate.id, {
+        name: taskToUpdate.name,
+        details: taskToUpdate.details,
+        status: destination.droppableId as StatusType,
+      });
+      loadTasks();
+    }
+  };
+
   return (
     <div className="max-w-6xl mx-auto min-h-screen p-4">
       {/* ヘッダ */}
       <div className="flex justify-between items-center mb-4">
         <h1 className="text-2xl font-bold">タスク一覧</h1>
-        <div>
-          {/* 例: グラフビューなどが削除されたなら、ここを空にするか他のボタンを置く */}
-        </div>
       </div>
 
-      {/* ビュー切り替えなど */}
+      {/* コントロールエリア：左にビュー切替、右に検索・ステータス絞り込み */}
       <div className="mb-4 flex justify-between items-center">
-        {/* 左側: テーブル or ボード 切り替え */}
         <div className="flex gap-2">
           <button
             className={`px-3 py-1 rounded ${
@@ -153,7 +165,6 @@ function TaskList() {
             ボード
           </button>
         </div>
-        {/* 右側: 検索、ステータス絞り込み */}
         <div className="flex gap-2 items-center">
           {showSearch ? (
             <div className="flex items-center gap-2">
@@ -225,7 +236,7 @@ function TaskList() {
         </div>
       </div>
 
-      {/* テーブルビュー or ボードビュー */}
+      {/* 表示部分 */}
       {viewMode === "table" ? (
         <table className="table-auto w-full">
           <thead className="bg-gray-50">
@@ -332,32 +343,48 @@ function TaskList() {
           </tbody>
         </table>
       ) : (
-        // ボードビュー
-        <div className="flex gap-4">
-          {ALL_STATUSES.map((status) => {
-            const tasksInStatus = filteredTasks.filter((t) => t.status === status);
-            return (
-              <div key={status} className="flex-1 min-w-[200px]">
-                <h2
-                  className={`inline-block px-2 py-1 mb-2 font-bold rounded ${
-                    bubbleColorMap[status]
-                  }`}
-                >
-                  {status}
-                </h2>
-                {tasksInStatus.map((task) => (
-                  <div
-                    key={task.id}
-                    className="mb-2 p-2 border border-gray-300 shadow-sm rounded text-sm cursor-pointer"
-                    onClick={() => navigate(`/task/${task.id}?view=board`)}
-                  >
-                    {task.name}
-                  </div>
-                ))}
-              </div>
-            );
-          })}
-        </div>
+        <DragDropContext onDragEnd={handleDragEnd}>
+          <div className="flex gap-4">
+            {ALL_STATUSES.map((status) => {
+              const tasksInStatus = filteredTasks.filter((t) => t.status === status);
+              return (
+                <Droppable droppableId={status} key={status}>
+                  {(provided: any, snapshot: any) => (
+                    <div
+                      ref={provided.innerRef}
+                      {...provided.droppableProps}
+                      className="flex-1 min-w-[200px]"
+                    >
+                      <h2
+                        className={`inline-block px-2 py-1 mb-2 font-bold rounded ${
+                          bubbleColorMap[status]
+                        }`}
+                      >
+                        {status}
+                      </h2>
+                      {tasksInStatus.map((task, index) => (
+                        <Draggable draggableId={task.id.toString()} index={index} key={task.id}>
+                          {(provided: any, snapshot: any) => (
+                            <div
+                              ref={provided.innerRef}
+                              {...provided.draggableProps}
+                              {...provided.dragHandleProps}
+                              className="mb-2 p-2 border border-gray-300 shadow-sm rounded text-sm cursor-pointer bg-white"
+                              onClick={() => navigate(`/task/${task.id}?view=board`)}
+                            >
+                              {task.name}
+                            </div>
+                          )}
+                        </Draggable>
+                      ))}
+                      {provided.placeholder}
+                    </div>
+                  )}
+                </Droppable>
+              );
+            })}
+          </div>
+        </DragDropContext>
       )}
     </div>
   );
