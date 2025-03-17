@@ -1,35 +1,40 @@
 # TODOアプリ
 
+![Golang](https://img.shields.io/badge/Golang-1.22-blue)
+![React](https://img.shields.io/badge/React-18.2.0-blue)
+![TypeScript](https://img.shields.io/badge/TypeScript-4.9.5-blue)
+![TailwindCSS](https://img.shields.io/badge/TailwindCSS-3.2.7-blue)
+![PostgreSQL](https://img.shields.io/badge/PostgreSQL-15-blue)
+![Swagger](https://img.shields.io/badge/Swagger-UI-orange)
+
 ## アプリ概要
+
 このTODOアプリは、バックエンドにGolang、フロントエンドにReact (TypeScript) とTailwind CSSを使用したシンプルなタスク管理システムです。  
 タスクの一覧表示、詳細編集、ドラッグ＆ドロップによるステータス変更など、基本的な機能を提供します。
 
 ## 技術スタック
 
 ### バックエンド
-![Golang](https://img.shields.io/badge/Golang-1.22-blue)
+
 - Golang を用いたAPIサーバー
 - net/http によるシンプルなルーティング
 - ホットリロード (Air)
 
 ### フロントエンド
-![React](https://img.shields.io/badge/React-18.2.0-blue)
-![TypeScript](https://img.shields.io/badge/TypeScript-4.9.5-blue)
-![TailwindCSS](https://img.shields.io/badge/TailwindCSS-3.2.7-blue)
+
 - React と TypeScript で構築
 - Tailwind CSS によるスタイリング
 - react-beautiful-dnd によるドラッグ＆ドロップ
 
 ### その他
-![PostgreSQL](https://img.shields.io/badge/PostgreSQL-15-blue)
-![Swagger](https://img.shields.io/badge/Swagger-UI-orange)
+
 - PostgreSQL によるデータベース管理
 - Swagger によるAPIドキュメント (Dockerで提供)
 - ホットリロード機能 (Air)
 
 ## プロジェクト構成
 
-```
+```txt
 todo-app/
 ├── backend/              # Golangバックエンド
 │   ├── main.go           # エントリーポイント
