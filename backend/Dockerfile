@@ -1,5 +1,5 @@
-# Golang1.22の公式イメージを使用
-FROM golang:1.24
+# Golang1.25の公式イメージを使用
+FROM golang:1.25
 
 # Airをインストール
 RUN go install github.com/air-verse/air@latest
